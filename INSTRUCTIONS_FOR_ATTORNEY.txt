@@ -1,0 +1,93 @@
+================================================================================
+FORENSIC GPS ACCIDENT RECONSTRUCTION & TELEMATICS EVIDENCE
+Case: Two-Vehicle Collision on August 28, 2026 (05:00:15 AM CDT)
+Location: Intersection of Bass Pro Dr & SH 121 Frontage Rd / On-Ramp, Grapevine, TX
+TxDOT Crash ID: 21609720.1 | Grapevine Police Case ID: 2600037671
+
+VEHICLES INVOLVED:
+* Unit 1 (Client): 2025 Volkswagen Atlas SUV (Silver | TX Plate: WHB6147 | Progressive Ins.)
+  - Commercial Uber Driver (>50,000 miles, ~2,000 trips in vehicle establishing 100% pre-crash functional capacity)
+* Unit 2 (Adverse): 2014 BMW 550i Sedan (4.4L Twin-Turbo V8, 448 HP | White | TX Plate: vdw2544 | VIN: WBAKN9C5XED681044)
+  - Driver: Tamika Savala-Fitzpatrick (DOB: 08/28/1997 | UNINSURED ON CR-4: Proof of Financial Responsibility: NO)
+================================================================================
+
+HOW TO VIEW THIS PRESENTATION:
+1. Double-click either file:
+   - Accident_Reconstruction_August_28_2026.html
+   - or index.html
+   
+2. The interactive reconstruction opens immediately in any modern web browser (Chrome, Edge, Safari, Firefox).
+   * Runs 100% locally from your computer or USB drive without internet access.
+   * Fully responsive for both desktop presentations and mobile review.
+
+================================================================================
+CRITICAL FORENSIC TIMELINE & TXDOT DIAMOND INTERCHANGE PROGRESSION:
+================================================================================
+1. 04:59:18 AM – 04:59:44 AM (WEST RAMP TERMINAL STOP):
+   * Client SUV came to a complete stop at 0.0 MPH for 26.0 seconds on SOLID RED at the West Terminal stop bar (Bass Pro Dr & TX-121 SB Frontage).
+   * Inductive pavement sensor called the TxDOT master interchange controller.
+
+2. 04:59:45 AM (WEST DEPARTURE ON GREEN):
+   * West signal turned SOLID GREEN. Client departed and accelerated across the 1,200 ft freeway bridge over SH 121, reaching 39.1 MPH.
+
+3. 05:00:06 AM – 05:00:10 AM (PACING THE TURN LIGHT DOWN TO ~15–17 MPH):
+   * Approaching the East Terminal turn bay in light 5:00 AM traffic, client tracked the traffic signal cycle ahead. Rather than rushing to an abrupt stop, client paced approach speed, smoothly decelerating from 39.1 MPH down to ~15–17 MPH to meet the green arrow.
+
+4. 05:00:11 AM (WHITE PAVEMENT ARROW & PROTECTED GREEN ARROW TRIGGER):
+   * As client's front wheels reached the painted white left-turn pavement arrow (verified via Google Street View), the dedicated Left-Turn Signal next to the "SH 121 North" sign illuminated the PROTECTED GREEN ARROW.
+   * Exactly as timed, client entered the turn on GREEN at ~15–17 MPH without stopping in the turn lane. Opposing westbound traffic (Unit 2 BMW) was locked in SOLID RED.
+
+5. 05:00:14 AM (POINT OF INEVITABLE IMPACT & DRIVER PERSPECTIVE):
+   * Client's SUV completed the turn, oriented straight North (0.0° N) into the SH 121 entrance ramp (exact perspective of Google Street View photo).
+   * Looking east through the passenger window past Waffle House/Shell, client observed the white BMW approaching the crosswalk at 42 MPH without slowing.
+   * With zero avenue of escape and nowhere to steer, collision was physically unavoidable.
+
+6. 05:00:15 AM (T-BONE IMPACT):
+   * Unit 2 (BMW 550) entered the intersection late against the red signal, slamming its front nose (12 O'CLOCK damage) into Unit 1's right middle/rear side (3 O'CLOCK damage).
+   * Client's front bumper was 100% undamaged, conclusively refuting any claim that Unit 1 struck Unit 2.
+
+================================================================================
+CRITICAL LEGAL REBUTTALS (DISPROVING OFFICER SMITH'S NARRATIVE):
+================================================================================
+1. RECORDED VIDEO PROOF OF CLIENT'S STATEMENT:
+   * Client has on-scene video recording explicitly telling the investigating police officer that her light WAS GREEN.
+   * Client never stated, admitted, or agreed to turning on a "flashing yellow light." The officer's narrative claiming a flashing yellow light is directly contradicted by contemporaneous recorded video audio.
+2. PHYSICAL DAMAGE DISPROVES "UNIT 1 STRUCK UNIT 2":
+   * Unit 1 sustained 3 O'CLOCK right side damage; Unit 2 sustained 12 O'CLOCK front nose damage. Unit 1's front bumper is completely undamaged. Unit 2 rammed Unit 1 broadside.
+3. ADVERSE DRIVER UNINSURED:
+   * Certified TxDOT crash report (#21609720.1) confirms adverse driver Tamika Savala-Fitzpatrick was driving without insurance (Proof of Financial Responsibility: NO).
+
+================================================================================
+CRITICAL SUBPOENAS & SPOLIATION LETTERS (TIME-SENSITIVE):
+================================================================================
+1. TXDOT FORT WORTH DISTRICT (NEMA LOGS & ITS CAMERAS):
+   * Address: 2501 SW Loop 820, Fort Worth, TX 76133 | Main: (817) 370-6500
+   * Corridor Contact: Michael Peters (817-370-6846 / michael.peters@txdot.gov)
+   * Formal ORR: TxDOT_ORR@txdot.gov
+   * Subpoena Request: 
+     - "Ring-and-Barrier and Phase Sequence Diagrams" for SH-121 & Bass Pro Dr on 08/28/2026.
+     - "NEMA TS2 Event/Fault Logs" for master cabinet from 04:58 AM to 05:05 AM.
+     - Subpoena video from ITS Camera "SH121 @ Bass Pro" (SH121.Bass Pro.SB) before 7-day overwrite.
+
+2. CITY OF GRAPEVINE PUBLIC WORKS (MUNICIPAL CABINET MAINTENANCE):
+   * Address: 501 Shady Brook Dr, Grapevine, TX 76051 | Direct: (817) 410-3330 | Main: (817) 410-3000
+
+3. THIRD-PARTY COMMERCIAL SURVEILLANCE SPOLIATION:
+   * Shell Gas Station: 2000 W Bethel Rd, Grapevine, TX 76051 | (817) 421-2295 (Canopy/pumps face intersection)
+   * Hampton Inn & Suites DFW North: 1750 N Hwy 121, Grapevine, TX 76051 | (972) 471-5000 (Overlooks corridor)
+   * Aloft Dallas DFW Airport Grapevine: 1033 N Main St, Grapevine, TX 76051 | (817) 488-6677 (Passenger pickup site)
+
+================================================================================
+KEY INTERACTIVE FEATURES FOR LEGAL / INSURANCE PROCEEDINGS:
+================================================================================
+* "Play 2-Min (04:58)" Button: Plays the complete approach from the 26s stop to impact.
+* "Replay 10s" Button: Replays the critical turn execution and impact sequence.
+* "Impact" Button: Jumps directly to 05:00:15 AM impact moment.
+* Interactive Map Markers:
+  - 1. West Ramp Terminal Light (26s Red Stop -> Green Departure)
+  - 2. White Pavement Arrow (Turn Arrow Trigger Point at 05:00:11 AM)
+  - 3. Driver Eyewitness Viewpoint (Point of Inevitable Impact at 05:00:14 AM)
+  - 4. Collision Site & Physical Impact Vector Marker
+* Speed Graph Scrubber: Drag anywhere along the timeline or click the speed profile to jump instantly to any sub-second timestamp.
+* "GPS Forensics" Modal: Displays Exhibit A hardware-stamped photo, police report summary, and complete sub-second telematics log.
+================================================================================

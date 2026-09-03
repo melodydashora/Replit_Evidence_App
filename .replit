@@ -1,0 +1,14 @@
+run = "node server.js"
+entrypoint = "server.js"
+hidden = [".git", "node_modules"]
+
+[nix]
+channel = "stable-23_11"
+
+[deployment]
+run = ["node", "server.js"]
+deploymentTarget = "autoscale"
+
+[[ports]]
+localPort = 3000
+externalPort = 80

@@ -1,0 +1,27 @@
+{
+  "name": "grapevine-accident-reconstruction-portal",
+  "version": "2.0.0",
+  "description": "Forensic GPS Telematics Accident Reconstruction & Master Legal Evidence Portfolio",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "accident-reconstruction",
+    "gps-telematics",
+    "legal-evidence",
+    "forensics",
+    "leaflet",
+    "txdot"
+  ],
+  "author": "Melody Dawn Dashora Legal Portfolio",
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

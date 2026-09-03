@@ -1,0 +1,1841 @@
+:root {
+  --bg-primary: #0a0d14;
+  --bg-secondary: #111827;
+  --bg-glass: rgba(17, 24, 39, 0.88);
+  --bg-glass-card: rgba(23, 32, 54, 0.92);
+  --border-glass: rgba(255, 255, 255, 0.12);
+  --border-accent: rgba(59, 130, 246, 0.5);
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --accent-blue: #3b82f6;
+  --accent-cyan: #06b6d4;
+  --accent-green: #10b981;
+  --accent-amber: #f59e0b;
+  --accent-red: #ef4444;
+  --accent-purple: #8b5cf6;
+  --glow-blue: 0 0 20px rgba(59, 130, 246, 0.4);
+  --glow-red: 0 0 25px rgba(239, 68, 68, 0.6);
+  --glow-green: 0 0 20px rgba(16, 185, 129, 0.4);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  height: 100%;
+  height: 100dvh;
+  width: 100vw;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==========================================================================
+   Top Header Bar
+   ========================================================================== */
+.header-bar {
+  height: 56px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border-glass);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  padding-top: env(safe-area-inset-top, 0px);
+  z-index: 1000;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.brand-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.badge-tag {
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid var(--border-accent);
+  color: #60a5fa;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.badge-tag.live {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #34d399;
+}
+
+.badge-tag.critical {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #f87171;
+  animation: pulse-glow 2s infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 5px rgba(239, 68, 68, 0.3); }
+  50% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.7); }
+}
+
+.title-text {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.title-subtext {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* Desktop Header Controls */
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.preset-selector-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 4px 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-glass);
+}
+
+.preset-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.preset-select {
+  background: transparent;
+  color: var(--text-primary);
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+}
+
+.preset-select option {
+  background: var(--bg-secondary);
+  color: #fff;
+}
+
+.btn-header {
+  background: var(--bg-glass-card);
+  border: 1px solid var(--border-glass);
+  color: var(--text-primary);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-header:hover {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: var(--accent-blue);
+  color: #fff;
+  box-shadow: var(--glow-blue);
+}
+
+.btn-header.danger {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #fca5a5;
+}
+
+.btn-header.danger:hover {
+  background: rgba(239, 68, 68, 0.35);
+  border-color: var(--accent-red);
+  color: #fff;
+  box-shadow: var(--glow-red);
+}
+
+.btn-header.active {
+  background: rgba(59, 130, 246, 0.25);
+  border-color: var(--accent-blue);
+  color: #fff;
+  box-shadow: var(--glow-blue);
+}
+
+/* Mobile Header Cluster */
+.mobile-header-actions {
+  display: none;
+  align-items: center;
+  gap: 8px;
+}
+
+.mobile-impact-btn {
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.mobile-menu-btn {
+  padding: 7px 11px;
+  font-size: 14px;
+}
+
+/* ==========================================================================
+   Mobile Options Drawer (Slide-Down / Modal)
+   ========================================================================== */
+.mobile-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 2500;
+  display: none;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeIn 0.2s ease;
+}
+
+.mobile-drawer-overlay.active {
+  display: flex;
+}
+
+.mobile-drawer-box {
+  width: 100%;
+  max-width: 440px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  margin-top: 48px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: slideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 10px;
+}
+
+.drawer-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.drawer-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.drawer-close-btn:hover {
+  color: #fff;
+}
+
+.drawer-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.drawer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.drawer-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+}
+
+.drawer-select {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-glass);
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-size: 13px;
+  outline: none;
+  width: 100%;
+}
+
+.drawer-select option {
+  background: var(--bg-secondary);
+  color: #fff;
+}
+
+.drawer-toggles-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.drawer-toggle-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-glass);
+  color: var(--text-muted);
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.drawer-toggle-btn.active {
+  background: rgba(59, 130, 246, 0.25);
+  border-color: var(--accent-blue);
+  color: #fff;
+}
+
+.drawer-action-btn {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.drawer-action-btn.primary {
+  background: rgba(59, 130, 246, 0.2);
+  border: 1px solid var(--accent-blue);
+  color: #93c5fd;
+}
+
+.drawer-action-btn.secondary {
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid var(--accent-green);
+  color: #6ee7b7;
+}
+
+/* ==========================================================================
+   Main Content Layout (Map + HUD)
+   ========================================================================== */
+.main-stage {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+#map {
+  width: 100%;
+  height: 100%;
+  background: #0f172a;
+  z-index: 1;
+}
+
+/* Mobile Floating HUD Mini-Pill */
+.mobile-hud-pill {
+  display: none;
+}
+
+/* Telematics HUD (Right Floating Panel on Desktop) */
+.hud-panel {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 320px;
+  background: var(--bg-glass-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  z-index: 900;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  user-select: none;
+}
+
+.hud-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 8px;
+}
+
+.hud-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--accent-blue);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hud-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hud-time-pill {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.hud-close-mobile {
+  display: none;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 2px 6px;
+}
+
+.hud-close-mobile:hover {
+  color: #fff;
+}
+
+/* Speedometer Gauge Area */
+.speedometer-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 4px 0;
+}
+
+.gauge-svg {
+  width: 210px;
+  height: 115px;
+}
+
+.gauge-bg-arc {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 14;
+  stroke-linecap: round;
+}
+
+.gauge-val-arc {
+  fill: none;
+  stroke: url(#speedGradient);
+  stroke-width: 14;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.1s linear;
+}
+
+.speed-digital-display {
+  position: absolute;
+  bottom: 0px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.speed-number {
+  font-family: var(--font-mono);
+  font-size: 38px;
+  font-weight: 800;
+  line-height: 1;
+  color: #fff;
+  text-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+}
+
+.speed-unit-toggle {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  cursor: pointer;
+  margin-top: 2px;
+  display: flex;
+  gap: 4px;
+}
+
+.speed-unit-toggle span.active {
+  color: #fff;
+  text-decoration: underline;
+}
+
+/* Telematics Data Grid */
+.telematics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.data-card {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.data-card.full-width {
+  grid-column: span 2;
+}
+
+.data-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.data-val {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.data-val.highlight {
+  color: var(--accent-cyan);
+}
+
+/* Compass Widget */
+.compass-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  grid-column: span 2;
+}
+
+.compass-visual {
+  width: 38px;
+  height: 38px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.compass-needle {
+  width: 100%;
+  height: 100%;
+  transition: transform 0.1s linear;
+}
+
+/* Collision / Impact Alert Banner */
+.impact-alert-banner {
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  display: none;
+  animation: flash-border 1.5s infinite;
+}
+
+.impact-alert-banner.active {
+  display: flex;
+}
+
+@keyframes flash-border {
+  0%, 100% { border-color: rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.15); }
+  50% { border-color: rgba(239, 68, 68, 0.9); background: rgba(239, 68, 68, 0.35); box-shadow: var(--glow-red); }
+}
+
+.impact-icon {
+  font-size: 22px;
+  color: #f87171;
+}
+
+.impact-text-title {
+  font-size: 11px;
+  font-weight: 800;
+  color: #fca5a5;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.impact-text-desc {
+  font-size: 11px;
+  color: #fff;
+  font-weight: 500;
+}
+
+/* Floating Map Controls (Top Left) */
+.map-view-modes {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 900;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.view-mode-pill-box {
+  background: var(--bg-glass-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
+  padding: 4px;
+  display: flex;
+  gap: 4px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+.btn-mode {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s ease;
+}
+
+.btn-mode:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.btn-mode.active {
+  background: var(--accent-blue);
+  color: #fff;
+  box-shadow: var(--glow-blue);
+}
+
+/* ==========================================================================
+   Bottom Telematics Graph & Time Runner Dock
+   ========================================================================== */
+.bottom-dock {
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border-glass);
+  z-index: 1000;
+  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Mini Synchronized Speed Profile Chart */
+.chart-dock-row {
+  height: 52px;
+  position: relative;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.25);
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+}
+
+#speedChart {
+  width: 100%;
+  height: 46px;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.chart-label {
+  position: absolute;
+  top: 4px;
+  left: 24px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  pointer-events: none;
+}
+
+/* Scrubber & Controls Row */
+.timeline-dock-row {
+  padding: 10px 20px 14px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Milestone Indicators Track */
+.milestones-track {
+  position: relative;
+  height: 14px;
+  width: 100%;
+  margin-bottom: -2px;
+}
+
+.milestone-pin {
+  position: absolute;
+  transform: translateX(-50%);
+  bottom: 0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.15s ease;
+  z-index: 10;
+}
+
+.milestone-pin:hover {
+  transform: translateX(-50%) scale(1.3);
+}
+
+.milestone-pin .pin-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-blue);
+  border: 1.5px solid #fff;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.8);
+}
+
+.milestone-pin.impact .pin-dot {
+  background: var(--accent-red);
+  width: 11px;
+  height: 11px;
+  box-shadow: var(--glow-red);
+  animation: pulse-pin 1.2s infinite;
+}
+
+@keyframes pulse-pin {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.4); }
+}
+
+.milestone-pin.stop .pin-dot {
+  background: var(--accent-amber);
+}
+
+.milestone-pin.peak .pin-dot {
+  background: var(--accent-purple);
+}
+
+/* Timeline Scrubber Bar */
+.scrubber-container {
+  position: relative;
+  width: 100%;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.scrubber-track-bg {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+  position: relative;
+  overflow: hidden;
+}
+
+.scrubber-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
+  border-radius: 3px;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.scrubber-thumb {
+  position: absolute;
+  top: 50%;
+  left: 0%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border: 2px solid var(--accent-blue);
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.8);
+  pointer-events: none;
+  transition: transform 0.05s ease;
+}
+
+/* Touch hit target expansion for thumb */
+.scrubber-thumb::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+}
+
+/* Control Buttons & Speed Dock */
+.controls-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.playback-controls-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-ctrl {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-glass);
+  color: var(--text-primary);
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.15s ease;
+}
+
+.btn-ctrl:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.btn-ctrl.play-btn {
+  width: 44px;
+  height: 44px;
+  background: var(--accent-blue);
+  border-color: var(--accent-blue);
+  color: #fff;
+  font-size: 16px;
+  border-radius: 50%;
+  box-shadow: var(--glow-blue);
+}
+
+.btn-ctrl.play-btn:hover {
+  background: #2563eb;
+  transform: scale(1.05);
+}
+
+.btn-jump-accident {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 0 12px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-jump-accident:hover {
+  background: rgba(239, 68, 68, 0.3);
+  border-color: var(--accent-red);
+  color: #fff;
+  box-shadow: var(--glow-red);
+}
+
+/* Time & Progress Readout */
+.time-readout-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+}
+
+.current-wall-clock {
+  font-size: 16px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.3px;
+}
+
+.time-range-bounds {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.progress-pct {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  background: rgba(6, 182, 212, 0.1);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+
+/* Speed Multipliers */
+.speed-buttons-group {
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  gap: 2px;
+}
+
+.btn-speed {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-speed:hover {
+  color: #fff;
+}
+
+.btn-speed.active {
+  background: rgba(59, 130, 246, 0.25);
+  border-color: var(--accent-blue);
+  color: #fff;
+  box-shadow: var(--glow-blue);
+}
+
+/* Turn Dynamics Badge in HUD */
+.badge-turn {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-turn.straight {
+  background: rgba(148, 163, 184, 0.15);
+  color: var(--text-muted);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.badge-turn.turning-left {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+  border: 1px solid var(--accent-blue);
+}
+
+.badge-turn.turning-right {
+  background: rgba(16, 185, 129, 0.2);
+  color: #6ee7b7;
+  border: 1px solid var(--accent-green);
+}
+
+/* ==========================================================================
+   Two-Vehicle Map Markers & Animation Elements
+   ========================================================================== */
+.suv-marker-container {
+  position: relative;
+  width: 14px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.suv-halo {
+  display: none;
+}
+
+.suv-body-svg {
+  width: 11px;
+  height: 21px;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.9));
+  transition: transform 0.05s linear;
+}
+
+.sedan-marker-container {
+  position: relative;
+  width: 14px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sedan-body-svg {
+  width: 10.5px;
+  height: 20px;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.9));
+  transition: transform 0.05s linear;
+}
+
+.suv-headlights {
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 9px;
+  height: 5px;
+  display: flex;
+  justify-content: space-between;
+  opacity: 0.9;
+}
+
+.suv-beam {
+  width: 2px;
+  height: 5px;
+  background: linear-gradient(to top, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0));
+  border-radius: 1px;
+  filter: blur(0.5px);
+}
+
+.suv-brakelights {
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 9px;
+  height: 3px;
+  display: flex;
+  justify-content: space-between;
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+
+.suv-brakelight-beam {
+  width: 2.5px;
+  height: 2.5px;
+  border-radius: 50%;
+  background: #ff1e1e;
+  box-shadow: 0 0 4px #ff0000;
+}
+
+.suv-marker-container.braking .suv-brakelights {
+  opacity: 1;
+}
+
+/* Dramatic Collision Impact Flash Shockwave */
+.impact-shockwave-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 3px solid #ef4444;
+  box-shadow: 0 0 20px #ef4444, inset 0 0 15px #ef4444;
+  animation: shockwave-expand 1.4s infinite ease-out;
+  pointer-events: none;
+}
+
+@keyframes shockwave-expand {
+  0% { transform: translate(-50%, -50%) scale(0.4); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(2.4); opacity: 0; }
+}
+
+/* Custom Map Marker Tooltip Badges */
+.event-map-popup .leaflet-popup-content-wrapper {
+  background: var(--bg-glass-card);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-glass);
+  color: #fff;
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+}
+
+.event-map-popup .leaflet-popup-tip {
+  background: var(--bg-glass-card);
+}
+
+.event-popup-content {
+  padding: 4px;
+}
+
+.event-popup-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.event-popup-title.impact {
+  color: #f87171;
+}
+
+.event-popup-desc {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* ==========================================================================
+   Evidence Breakdown Modal Dialog
+   ========================================================================== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  z-index: 2000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.modal-overlay.active {
+  display: flex;
+}
+
+.modal-box {
+  width: 680px;
+  max-width: 95vw;
+  max-height: 85vh;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 12px;
+}
+
+.modal-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.modal-close:hover {
+  color: #fff;
+}
+
+.table-scroll-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.evidence-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  min-width: 500px;
+}
+
+.evidence-table th, .evidence-table td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.evidence-table th {
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 700;
+  font-size: 10px;
+  position: sticky;
+  top: 0;
+  background: var(--bg-secondary);
+}
+
+.evidence-table tr.highlight-row {
+  background: rgba(239, 68, 68, 0.15);
+  font-weight: 700;
+  color: #fca5a5;
+}
+
+/* ==========================================================================
+   Responsive Breakpoints: Tablets & Desktops
+   ========================================================================== */
+@media (max-width: 1100px) {
+  .title-subtext {
+    display: none;
+  }
+}
+
+@media (max-width: 950px) {
+  .preset-label {
+    display: none;
+  }
+  #btnTurnScale, #btnSkipStops, #btnAutoStopImpact {
+    padding: 6px 8px;
+  }
+}
+
+/* ==========================================================================
+   Mobile Responsive Rules (Phone Viewports <= 768px)
+   ========================================================================== */
+@media (max-width: 768px) {
+  .header-bar {
+    height: 48px;
+    padding: 0 12px;
+  }
+
+  .title-main {
+    font-size: 14px;
+  }
+
+  .badge-tag .badge-text {
+    display: none;
+  }
+
+  .badge-tag {
+    padding: 3px 6px;
+  }
+
+  .desktop-header-controls {
+    display: none !important;
+  }
+
+  .mobile-header-actions {
+    display: flex;
+  }
+
+  /* Floating Telematics Mini-Pill at top of map */
+  .mobile-hud-pill {
+    display: flex;
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 950;
+    background: rgba(17, 24, 39, 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 24px;
+    padding: 5px 12px;
+    gap: 8px;
+    align-items: center;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    font-size: 11px;
+    cursor: pointer;
+    user-select: none;
+    max-width: calc(100vw - 20px);
+    white-space: nowrap;
+  }
+
+  .pill-stat {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: #e2e8f0;
+  }
+
+  .pill-stat.highlight {
+    color: var(--accent-cyan);
+  }
+
+  .pill-divider {
+    width: 1px;
+    height: 12px;
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .btn-toggle-hud {
+    background: rgba(59, 130, 246, 0.2);
+    border: 1px solid var(--accent-blue);
+    color: #93c5fd;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    margin-left: 2px;
+  }
+
+  /* Telematics HUD Sheet */
+  .hud-panel {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: 80vh;
+    border-radius: 20px 20px 0 0;
+    border-bottom: none;
+    padding: 16px 16px calc(20px + env(safe-area-inset-bottom, 0px)) 16px;
+    z-index: 1800;
+    transform: translateY(115%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.9);
+    overflow-y: auto;
+  }
+
+  .hud-panel.mobile-expanded {
+    transform: translateY(0);
+  }
+
+  .hud-close-mobile {
+    display: block;
+  }
+
+  /* Floating Camera Controls */
+  .map-view-modes {
+    top: 10px;
+    left: 10px;
+  }
+
+  .btn-mode {
+    padding: 5px 8px;
+    font-size: 10px;
+  }
+
+  /* Bottom Dock on Mobile */
+  .chart-dock-row {
+    height: 38px;
+    padding: 0 12px;
+  }
+
+  #speedChart {
+    height: 32px;
+  }
+
+  .chart-label {
+    left: 14px;
+    font-size: 8px;
+  }
+
+  .timeline-dock-row {
+    padding: 6px 12px calc(8px + env(safe-area-inset-bottom, 0px)) 12px;
+    gap: 6px;
+  }
+
+  .controls-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .playback-controls-group {
+    justify-content: space-between;
+    width: 100%;
+    gap: 4px;
+  }
+
+  .btn-ctrl {
+    min-width: 40px;
+    height: 40px;
+    font-size: 14px;
+  }
+
+  .btn-ctrl.play-btn {
+    min-width: 50px;
+    height: 44px;
+    font-size: 18px;
+  }
+
+  .btn-jump-accident {
+    padding: 0 8px;
+    height: 40px;
+    font-size: 11px;
+  }
+
+  .desktop-only-btn {
+    display: none;
+  }
+
+  /* Secondary row with time & speed pills */
+  .time-readout-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-top: 2px;
+  }
+
+  .current-wall-clock {
+    font-size: 14px;
+  }
+
+  .time-range-bounds {
+    display: none;
+  }
+
+  .speed-buttons-group {
+    overflow-x: auto;
+    width: 100%;
+    justify-content: flex-start;
+    padding: 2px 0;
+    gap: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .btn-speed {
+    flex: 0 0 auto;
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+
+  .desktop-speed {
+    display: none;
+  }
+
+  /* Evidence Modal Mobile */
+  .modal-box {
+    padding: 16px;
+    max-height: 88vh;
+  }
+
+  .exhibit-body {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .exhibit-img {
+    width: 100% !important;
+  }
+}
+
+/* ==========================================================================
+   Small Phones (iPhone SE, <= 400px width)
+   ========================================================================== */
+@media (max-width: 400px) {
+  .title-main {
+    font-size: 12px;
+  }
+
+  .btn-mode .mode-text {
+    display: none;
+  }
+
+  .btn-mode {
+    padding: 6px 8px;
+  }
+
+  .mobile-hud-pill {
+    padding: 4px 8px;
+    gap: 5px;
+    font-size: 10px;
+  }
+
+  .btn-jump-accident .btn-text {
+    display: none;
+  }
+
+  .btn-jump-accident {
+    padding: 0 10px;
+  }
+}
+
+/* ==========================================================================
+   Phone Landscape Mode Optimization (<= 500px height)
+   ========================================================================== */
+@media (max-height: 500px) and (orientation: landscape) {
+  .header-bar {
+    height: 40px;
+    padding: 0 10px;
+  }
+
+  .mobile-hud-pill {
+    top: 6px;
+    padding: 3px 8px;
+  }
+
+  .chart-dock-row {
+    display: none;
+  }
+
+  .timeline-dock-row {
+    padding: 4px 10px 6px 10px;
+    gap: 4px;
+  }
+
+  .hud-panel {
+    max-height: 90vh;
+  }
+
+  .hud-panel .speedometer-container {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   Texas Diamond Signal Phasing HUD & Traffic Light Markers
+   ========================================================================== */
+.signal-phasing-card {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.9)) !important;
+  border: 1px solid rgba(56, 189, 248, 0.35) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  padding: 10px 12px;
+}
+
+.badge-tag.signal-badge.green {
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid #10b981;
+  color: #34d399;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.badge-tag.signal-badge.red {
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid #ef4444;
+  color: #f87171;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.badge-tag.signal-badge.yellow {
+  background: rgba(245, 158, 11, 0.2);
+  border: 1px solid #f59e0b;
+  color: #fbbf24;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.signal-comparison-grid {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  gap: 5px;
+  margin: 8px 0;
+}
+
+.signal-box {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 5px 3px;
+  min-width: 0;
+}
+
+.signal-title {
+  font-size: 8px;
+  font-weight: 800;
+  color: #94a3b8;
+  margin-bottom: 4px;
+  text-align: center;
+  line-height: 1.15;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Realistic Traffic Signal Housing */
+.signal-housing {
+  background: #111827;
+  border: 1.5px solid #374151;
+  border-radius: 10px;
+  padding: 3px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8), 0 2px 6px rgba(0, 0, 0, 0.5);
+  position: relative;
+}
+
+/* Yellow backplate border edge like TxDOT standard */
+.signal-housing::before {
+  content: '';
+  position: absolute;
+  top: -2.5px;
+  left: -2.5px;
+  right: -2.5px;
+  bottom: -2.5px;
+  border: 1px solid #eab308;
+  border-radius: 12px;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.signal-lens {
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  transition: all 0.25s ease-in-out;
+}
+
+/* Lens Off States */
+.signal-lens.red.off {
+  background: #450a0a;
+  color: rgba(239, 68, 68, 0.3);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+.signal-lens.yellow.off {
+  background: #451a03;
+  color: rgba(245, 158, 11, 0.3);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+.signal-lens.green.off {
+  background: #022c22;
+  color: rgba(16, 185, 129, 0.3);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* Lens On States (Vibrant LED Glow) */
+.signal-lens.red.on {
+  background: #ef4444;
+  color: #ffffff;
+  box-shadow: 0 0 14px #ef4444, inset 0 1px 2px rgba(255, 255, 255, 0.8);
+  animation: signal-pulse 1.2s infinite alternate;
+}
+.signal-lens.yellow.on {
+  background: #f59e0b;
+  color: #ffffff;
+  box-shadow: 0 0 14px #f59e0b, inset 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+.signal-lens.green.on {
+  background: #10b981;
+  color: #ffffff;
+  box-shadow: 0 0 16px #10b981, inset 0 1px 2px rgba(255, 255, 255, 0.8);
+  animation: signal-pulse 1.4s infinite alternate;
+}
+
+@keyframes signal-pulse {
+  from { filter: brightness(1.0); }
+  to { filter: brightness(1.25); }
+}
+
+.signal-state-label {
+  margin-top: 5px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+.signal-state-label.green { color: #34d399; }
+.signal-state-label.red { color: #f87171; }
+.signal-state-label.yellow { color: #fbbf24; }
+
+/* Diamond Interlock Graphic between signals */
+.diamond-interlock-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+.diamond-shape-icon {
+  color: #38bdf8;
+  font-size: 16px;
+  filter: drop-shadow(0 0 8px #0284c7);
+  animation: diamond-float 2s infinite ease-in-out;
+}
+
+@keyframes diamond-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.interlock-text {
+  font-size: 8px;
+  font-weight: 800;
+  text-align: center;
+  color: #94a3b8;
+  line-height: 1.1;
+  margin-top: 3px;
+}
+
+.interlock-status-badge {
+  font-size: 7.5px;
+  font-weight: 800;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  padding: 1px 4px;
+  border-radius: 4px;
+  margin-top: 4px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.signal-interlock-caption {
+  font-size: 10px;
+  color: #cbd5e1;
+  line-height: 1.35;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 6px 8px;
+  border-radius: 6px;
+  border-left: 3px solid #38bdf8;
+  margin-top: 4px;
+}
+
+/* Map Signal Head Markers */
+.map-signal-marker-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: auto;
+}
+
+.map-signal-head {
+  background: #1e293b;
+  border: 2px solid #eab308;
+  border-radius: 8px;
+  padding: 3px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
+}
+
+.map-signal-lens {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.map-signal-lens.red.on { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
+.map-signal-lens.red.off { background: #450a0a; }
+.map-signal-lens.yellow.on { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
+.map-signal-lens.yellow.off { background: #451a03; }
+.map-signal-lens.green.on { background: #10b981; box-shadow: 0 0 8px #10b981; }
+.map-signal-lens.green.off { background: #022c22; }
+
+.map-signal-label {
+  background: rgba(15, 23, 42, 0.85);
+  color: #fff;
+  font-size: 8px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 3px;
+  margin-top: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  white-space: nowrap;
+}
+

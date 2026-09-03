@@ -1,6 +1,7 @@
 run = "node server.js"
 entrypoint = "server.js"
 hidden = [".git", "node_modules"]
+modules = ["nodejs-24"]
 
 [nix]
 channel = "stable-23_11"

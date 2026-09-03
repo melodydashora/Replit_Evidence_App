@@ -13,3 +13,15 @@ deploymentTarget = "autoscale"
 [[ports]]
 localPort = 3000
 externalPort = 80
+
+[[ports]]
+localPort = 3456
+externalPort = 3000
+
+[[ports]]
+localPort = 3457
+externalPort = 3001
+
+[[ports]]
+localPort = 3999
+externalPort = 3002

@@ -1839,3 +1839,20 @@ html, body {
   white-space: nowrap;
 }
 
+
+/* --- 2026-09-04 realism pass --- */
+/* Four-section flashing-yellow-arrow lens (MUTCD FYA flashes about once per second) */
+@keyframes fyaBlink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0.15; } }
+.signal-lens.flashing.on { animation: fyaBlink 1s steps(1, end) infinite; }
+.map-signal-lens.flashing.on { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; animation: fyaBlink 1s steps(1, end) infinite; }
+.map-signal-lens.flashing.off { background: #451a03; }
+.signal-state-label.yellow { color: #fbbf24; }
+.signal-badge.yellow { background: rgba(245, 158, 11, 0.2); border-color: rgba(245, 158, 11, 0.45); color: #fbbf24; }
+.scenario-select { background: rgba(15, 23, 42, 0.9); color: #e2e8f0; border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 6px; font-size: 10.5px; padding: 2px 4px; font-family: var(--font-sans); max-width: 150px; }
+/* Night lighting: dim the daytime imagery to 05:00 AM conditions (CR-4: DARK, LIGHTED); vehicle lights stay bright */
+body.night-mode .leaflet-tile-pane { filter: brightness(0.42) saturate(0.7) contrast(1.08); transition: filter 0.4s ease; }
+.leaflet-tile-pane { transition: filter 0.4s ease; }
+body.night-mode .suv-headlights, body.night-mode .suv-beam { opacity: 1; }
+/* Secondary callouts are hidden below zoom 18.75 (see updateCalloutVisibility) */
+#map.low-zoom .its-camera-marker, #map.low-zoom .shell-camera-marker, #map.low-zoom .mmu-cabinet-marker,
+#map.low-zoom .aloft-beacon-marker, #map.low-zoom .pavement-arrow-marker, #map.low-zoom .driver-view-marker { display: none; }

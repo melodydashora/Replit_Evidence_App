@@ -35,7 +35,7 @@ Because the adverse driver is uninsured, primary bodily injury recovery is gover
 | **Driver Name** | Melody Dawn Dashora (DOB: 07/01/1978, Age 48) | Tamika SAVALA-FITZPATRICK (DOB: 08/28/1997, Age 29) |
 | **Driver Address** | 6058 Midnight Moon Dr, Frisco, TX 75036 | 2290 W Tarleton St, Stephenville, TX 76401 / Irving, TX |
 | **Driver License** | Texas Class C #44807726 (No restrictions) | Texas Class C #36470205 (Corrective Lenses) |
-| **Vehicle Make / Model** | **2025 Volkswagen Atlas SUV** (Silver) | **2014 BMW 550 4-Door Sedan** (White) |
+| **Vehicle Make / Model** | **2025 Volkswagen Atlas SE FWD SUV** (Black — Deep Black Pearl per Mitchell estimate and pre-accident photos; the CR-4 entry reads "SILVER" and should be corrected) | **2014 BMW 550 4-Door Sedan** (White) |
 | **VIN / License Plate** | VIN: **1V2DR2CA0SC529343** · Plate: **TX WHB6147** | VIN: **WBAKN9C5XED681044** · Plate: **TX vdw2544** |
 | **Vehicle Owner** | Melody Dawn Dashora (Financed: Capital One) | Tamika Savala (801 Lake Canyon Pkwy, Irving, TX 75039) |
 | **Insurance Carrier** | **Progressive County Mutual Ins. Co.** | **UNINSURED ON CR-4** (`Proof of Financial Resp: NO` / Subject to ISO Discovery) |
@@ -393,7 +393,7 @@ All electronic files, forensic models, datasets, and certified documents are mai
 |---|---|---|
 | **Exhibit 1** | Certified Police Crash Report | TxDOT Crash ID **21609720.1** / Case **2600037671** (Certified 09/02/2026). Confirms Unit 2 was UNINSURED and documents 3 O'Clock vs 12 O'Clock damage vectors. |
 | **Exhibit 2** | 13,285-Record GPS Telematics | Sub-second dataset (`gps_full_data.js`). Proves 26s stop at West light, bridge crossing, amber deceleration to 17 MPH, green arrow trigger, and 0.0° North alignment. |
-| **Exhibit 3** | Interactive Forensic Reconstruction | Web application (`Accident_Reconstruction_August_28_2026.html`). Models dual TxDOT diamond signal controller, vehicle kinematics, speed graph, and driver viewpoint. |
+| **Exhibit 3** | Interactive Forensic Reconstruction | Web application (`index.html`). Models dual TxDOT diamond signal controller, vehicle kinematics, speed graph, and driver viewpoint. |
 | **Exhibit 4** | On-Scene Video Audio | Recorded video taken at the scene where client explicitly states to police officer: *"My light was green."* Directly refutes officer's narrative. |
 | **Exhibit 5** | Dashcam Exhibit A Photo | Hardware-stamped scene photo (05:05:43 AM) documenting severe structural intrusion, deployed side curtains, and chemical airbag residue. |
 | **Exhibit 6** | Apple Crash Detection 911 Call | Automated 911 dispatch recording (05:02 AM) stating owner was in severe crash and unresponsive. Directly refutes "denies LOC" ER entry. |
@@ -421,7 +421,7 @@ All electronic files, forensic models, datasets, and certified documents are mai
 
 | Date | Category | Payee / Description | Amount | Billed To / Source |
 |---|---|---|---|---|
-| 08/28/2026 | Emergency Medical | Baylor Scott & White ER Encounter (MRN 15608293) | TBD (Hospital Lien / Self-Pay) | Pending Charity Care / PIP |
+| 08/28/2026 | Emergency Medical | Baylor Scott & White ER Encounter (MRN 15608293) | $13,528.55 balance due per MyBSWHealth portal (statement dated 09/01/2026; itemized statement not yet obtained) | Pending Charity Care / PIP |
 | 08/28/2026 | Pharmacy | CVS #10523 (Toradol, Robaxin, Tramadol) | Out of Pocket | Submitted to PIP ($10,003) |
 | 08/28/2026 | Tow & Impound | Euless B&B Wrecker Service (Tow & Storage) | TBD (Statutory Cap $22.85/day) | Progressive Collision / Subrogation |
 | 08/28–Pres. | Lost Earnings | Uber Commercial Driving (Baseline: ~2,000 trips / 50k mi) | Estimated ~$1,200–$1,500/week | PIP Wage Loss (80%) & UM Claim |

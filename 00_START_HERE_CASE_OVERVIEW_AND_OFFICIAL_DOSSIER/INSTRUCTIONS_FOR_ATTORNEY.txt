@@ -5,16 +5,15 @@ Location: Intersection of Bass Pro Dr & SH 121 Frontage Rd / On-Ramp, Grapevine,
 TxDOT Crash ID: 21609720.1 | Grapevine Police Case ID: 2600037671
 
 VEHICLES INVOLVED:
-* Unit 1 (Client): 2025 Volkswagen Atlas SUV (Silver | TX Plate: WHB6147 | Progressive Ins.)
+* Unit 1 (Client): 2025 Volkswagen Atlas SE FWD SUV (Black per photos and repair estimates; CR-4 entry reads "Silver" | TX Plate: WHB6147 | Progressive Ins.)
   - Commercial Uber Driver (>50,000 miles, ~2,000 trips in vehicle establishing 100% pre-crash functional capacity)
 * Unit 2 (Adverse): 2014 BMW 550i Sedan (4.4L Twin-Turbo V8, 448 HP | White | TX Plate: vdw2544 | VIN: WBAKN9C5XED681044)
   - Driver: Tamika Savala-Fitzpatrick (DOB: 08/28/1997 | UNINSURED ON CR-4: Proof of Financial Responsibility: NO)
 ================================================================================
 
 HOW TO VIEW THIS PRESENTATION:
-1. Double-click either file:
-   - Accident_Reconstruction_August_28_2026.html
-   - or index.html
+1. Double-click index.html (in the folder that also contains telemetry_engine.js, gps_full_data.js and styles.css),
+   or open the hosted copy at /reconstruction on the case evidence portal.
    
 2. The interactive reconstruction opens immediately in any modern web browser (Chrome, Edge, Safari, Firefox).
    * Runs 100% locally from your computer or USB drive without internet access.

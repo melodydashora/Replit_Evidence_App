@@ -19,6 +19,36 @@
   const accidentEvent = rawData.accident_event;
   const IMPACT_GLOBAL_INDEX = 12783; // 05:00:15 AM
 
+  // --- Motion-derived headings (smooth and deterministic) ---
+  // The source CSV has no heading column; the dataset's hd field is a rough derivative that is noisy at low
+  // speed and meaningless while parked. Recompute heading from the position track (central difference) and
+  // carry the last moving heading through stationary samples. Samples from the impact onward take the
+  // scripted rest heading used by the turn override, so the marker does not snap when the override ends.
+  function bearingDeg(a, b) {
+    const toRad = Math.PI / 180;
+    const dLon = (b.lon - a.lon) * toRad;
+    const y = Math.sin(dLon) * Math.cos(b.lat * toRad);
+    const x = Math.cos(a.lat * toRad) * Math.sin(b.lat * toRad) - Math.sin(a.lat * toRad) * Math.cos(b.lat * toRad) * Math.cos(dLon);
+    return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+  }
+  const motionHd = new Float32Array(allPoints.length);
+  {
+    let last = allPoints[0].hd || 0;
+    for (let i = 0; i < allPoints.length; i++) {
+      if (i >= IMPACT_GLOBAL_INDEX) { motionHd[i] = 0.0; continue; }
+      const p = allPoints[i];
+      if (p.spd >= 1.5) {
+        const a = allPoints[Math.max(0, i - 1)];
+        const b = allPoints[Math.min(allPoints.length - 1, i + 1)];
+        if (a !== b && (a.lat !== b.lat || a.lon !== b.lon)) last = bearingDeg(a, b);
+      }
+      motionHd[i] = last;
+    }
+  }
+  const overrideEntryHd = motionHd[12780]; // heading the scripted turn starts from (no snap at the boundary)
+  let signalScenario = 'client'; // 'client' (green arrow, opposing red) | 'cr4' (flashing yellow arrow, opposing green)
+  let isNightMode = true;        // the collision happened at 05:00 in darkness (CR-4: DARK, LIGHTED)
+
   // --- State Variables ---
   let activePoints = [];
   let activeStartIndex = 0;
@@ -117,7 +147,8 @@
   // --- Initialize Leaflet Map ---
   const map = L.map('map', {
     zoomControl: false,
-    attributionControl: false
+    attributionControl: false,
+    zoomSnap: 0.05 // fractional zoom so the follow camera eases instead of stepping whole levels
   }).setView([32.955086, -97.038101], 18);
 
   L.control.zoom({ position: 'bottomright' }).addTo(map);
@@ -148,11 +179,33 @@
     }),
     streets: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19
+    }),
+    // Google Map Tiles API (2D satellite), proxied by server.js so the API key stays server-side.
+    google_satellite: L.tileLayer('/gtiles/{z}/{x}/{y}', {
+      maxZoom: 21,
+      attribution: 'Imagery &copy; Google'
     })
   };
 
+  // Hide secondary callout labels when zoomed out so the intersection is not buried under badges
+  function updateCalloutVisibility() { mapElement.classList.toggle('low-zoom', map.getZoom() < 18.75); }
+  map.on('zoom zoomend', updateCalloutVisibility);
+  updateCalloutVisibility();
+
   tileLayers.satellite_hybrid.addTo(map);
   let currentLayer = tileLayers.satellite_hybrid;
+
+  // The Google layer is only offered when the server reports a configured GOOGLE_MAPS_API_KEY (see /config.js).
+  const googleTilesAvailable = !!(window.APP_CONFIG && window.APP_CONFIG.googleSatelliteTiles);
+  if (!googleTilesAvailable) {
+    document.querySelectorAll('option[value="google_satellite"]').forEach(opt => opt.remove());
+    delete tileLayers.google_satellite;
+  }
+  // Google Maps Platform terms require visible attribution while its imagery is shown.
+  const googleAttribution = L.control.attribution({ position: 'bottomleft', prefix: false });
+  googleAttribution.addAttribution('Imagery &copy; Google');
+  map.on('layeradd', (e) => { if (tileLayers.google_satellite && e.layer === tileLayers.google_satellite) googleAttribution.addTo(map); });
+  map.on('layerremove', (e) => { if (tileLayers.google_satellite && e.layer === tileLayers.google_satellite) googleAttribution.remove(); });
 
   // Polyline Paths & Markers Layer Group
   let routePolyline = null;
@@ -456,13 +509,14 @@
         <div class="map-signal-head">
           <div class="map-signal-lens red off" id="mapU1Red"></div>
           <div class="map-signal-lens yellow off" id="mapU1Yellow"></div>
+          <div class="map-signal-lens yellow flashing off" id="mapU1Flash" title="Flashing yellow arrow section (four-section FYA head)"></div>
           <div class="map-signal-lens green on" id="mapU1Green"></div>
         </div>
         <div class="map-signal-label" id="mapU1Label" style="color:#34d399;">TURN GREEN</div>
       </div>
     `;
     signalMarkerU1 = L.marker([32.955030, -97.038190], {
-      icon: L.divIcon({ html: signalU1Html, className: 'map-signal-icon-u1', iconSize: [40, 50], iconAnchor: [20, 25] }),
+      icon: L.divIcon({ html: signalU1Html, className: 'map-signal-icon-u1', iconSize: [40, 60], iconAnchor: [20, 30] }),
       zIndexOffset: 950
     }).addTo(map).bindPopup(`
       <div class="event-popup-content">
@@ -476,7 +530,7 @@
     // 2b. White Pavement Turn Arrow Marker (Google Street View Match)
     const arrowPavementHtml = `
       <div style="background:rgba(15,23,42,0.92); border:1.5px solid #38bdf8; border-radius:6px; padding:2px 6px; box-shadow:0 3px 8px rgba(0,0,0,0.6); display:flex; align-items:center; gap:4px; font-size:9.5px; font-weight:800; color:#38bdf8; white-space:nowrap;">
-        <i class="fa-solid fa-arrow-left" style="color:#fff;"></i> White Pavement Arrow (Green Arrow Trigger @ 05:00:11 AM)
+        <i class="fa-solid fa-arrow-left" style="color:#fff;"></i> White Pavement Arrow (client: green arrow at 05:00:11 AM)
       </div>
     `;
     L.marker([32.955030, -97.038380], {
@@ -496,7 +550,7 @@
     // 2c. Driver's Perspective / Point of Inevitable Collision (Google Street View Match)
     const perspectiveHtml = `
       <div style="background:rgba(220,38,38,0.92); border:1.5px solid #fff; border-radius:6px; padding:2px 6px; box-shadow:0 3px 8px rgba(0,0,0,0.6); display:flex; align-items:center; gap:4px; font-size:9.5px; font-weight:800; color:#fff; white-space:nowrap;">
-        <i class="fa-solid fa-eye"></i> Driver Viewpoint: Point of Inevitable Impact (05:00:14 AM)
+        <i class="fa-solid fa-eye"></i> Driver Viewpoint (client's account, 05:00:14 AM)
       </div>
     `;
     L.marker([32.955075, -97.038105], {
@@ -504,7 +558,7 @@
       zIndexOffset: 945
     }).addTo(map).bindPopup(`
       <div class="event-popup-content">
-        <div class="event-popup-title" style="color:#ef4444;"><i class="fa-solid fa-eye"></i> Driver Eyewitness Viewpoint & Point of Inevitable Collision (05:00:14 AM)</div>
+        <div class="event-popup-title" style="color:#ef4444;"><i class="fa-solid fa-eye"></i> Driver Viewpoint at 05:00:14 AM (client's account)</div>
         <div class="event-popup-desc">
           <strong>Orientation:</strong> Facing 0.0° Straight North into Frontage Rd / SH 121 Ramp (exact perspective of Google Street View photo).<br>
           <strong>Eyewitness Observation:</strong> Looking east through right window past Waffle House / Shell, driver observed the white BMW approaching the crosswalk at 42 MPH without slowing.<br>
@@ -588,8 +642,8 @@
       <div class="event-popup-content">
         <div class="event-popup-title" style="color:#10b981;"><i class="fa-solid fa-microchip"></i> NEMA TS2 Malfunction Management Unit (MMU)</div>
         <div class="event-popup-desc">
-          <strong>Hardware Interlock:</strong> Physical MMU unit in cabinet monitors circuit voltages.<br>
-          <strong>Scientific Proof:</strong> It is <em>physically and electronically impossible</em> for opposing through traffic to receive a yellow or green signal while the protected left-turn green arrow is illuminated. Any conflict forces 4-way emergency flashing red.
+          <strong>Hardware Interlock:</strong> The cabinet's Malfunction Management Unit monitors signal-head voltages and forces all-red flash if conflicting <em>green</em> indications ever appear together (e.g. a green left arrow with an opposing green ball).<br>
+          <strong>What it does not rule out:</strong> The eastbound left-turn head here is a four-section flashing-yellow-arrow (FYA) head (binder 09 Street View exhibit). A flashing yellow arrow shown while opposing through traffic is green is the designed permissive interval, not a conflict. Whether this head showed a steady green arrow or a flashing yellow arrow at 05:00:11&ndash;05:00:15 depends on the controller's time-of-day plan and event logs (TPIA request drafted, binder 11).
         </div>
       </div>
     `, { className: 'event-map-popup' });
@@ -761,26 +815,40 @@
 
     if (!p0 || !p1) return p0 || { lat: 0, lon: 0, spd: 0, hd: 0, alt: 0, acc: 0, turnRate: 0, steeringAngle: 0, t: '' };
 
-    // Linear interpolation for SUV
-    let lat = p0.lat + (p1.lat - p0.lat) * ratio;
-    let lon = p0.lon + (p1.lon - p0.lon) * ratio;
+    // Catmull-Rom interpolation for the SUV position (smooth curvature between 1 Hz fixes). Falls back to
+    // linear at the ends of the active range and when either sample is stationary (nothing to curve through).
+    const pm = activePoints[Math.max(0, idx0 - 1)];
+    const p2 = activePoints[Math.min(activePoints.length - 1, idx1 + 1)];
+    const useSpline = idx0 > 0 && idx1 < activePoints.length - 1 && p0.spd > 1.5 && p1.spd > 1.5;
+    let lat, lon;
+    if (useSpline) {
+      const t = ratio, t2 = t * t, t3 = t2 * t;
+      const cr = (a, b, c, d) => 0.5 * ((2 * b) + (-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t2 + (-a + 3 * b - 3 * c + d) * t3);
+      lat = cr(pm.lat, p0.lat, p1.lat, p2.lat);
+      lon = cr(pm.lon, p0.lon, p1.lon, p2.lon);
+    } else {
+      lat = p0.lat + (p1.lat - p0.lat) * ratio;
+      lon = p0.lon + (p1.lon - p0.lon) * ratio;
+    }
     const spd = p0.spd + (p1.spd - p0.spd) * ratio;
     const kt = p0.kt + (p1.kt - p0.kt) * ratio;
     const alt = p0.alt + (p1.alt - p0.alt) * ratio;
     const acc = p0.acc + (p1.acc - p0.acc) * ratio;
 
-    // Angle interpolation for heading
-    let dAngle = (p1.hd - p0.hd) % 360;
+    // Heading from the motion track (motionHd), interpolated the short way round
+    const h0 = motionHd[activeStartIndex + idx0];
+    const h1 = motionHd[activeStartIndex + idx1];
+    let dAngle = (h1 - h0) % 360;
     if (dAngle > 180) dAngle -= 360;
     if (dAngle < -180) dAngle += 360;
-    let hd = (p0.hd + dAngle * ratio + 360) % 360;
+    let hd = (h0 + dAngle * ratio + 360) % 360;
 
     // Accurate Northward Turn Progression towards 121 Frontage Rd (5:00:12 - 5:00:15 AM)
     const curGlobal = activeStartIndex + idxFloat;
     if (curGlobal >= 12780 && curGlobal <= 12786) {
       if (curGlobal >= 12780 && curGlobal < 12781) {
         const turnProgress = (curGlobal - 12780);
-        hd = 75.0 - (75.0 - 45.0) * turnProgress;
+        hd = overrideEntryHd + (45.0 - overrideEntryHd) * turnProgress;
         lat = 32.955021 + (32.955038 - 32.955021) * turnProgress;
         lon = -97.038284 + (-97.038185 - (-97.038284)) * turnProgress;
       } else if (curGlobal >= 12781 && curGlobal < 12782) {
@@ -810,7 +878,7 @@
     // Calculate Turn Rate (deg/s) and Steering Angle
     const prevIdx = Math.max(0, idx0 - 1);
     const nextIdx = Math.min(activePoints.length - 1, idx1 + 1);
-    let windowDelta = (activePoints[nextIdx].hd - activePoints[prevIdx].hd) % 360;
+    let windowDelta = (motionHd[activeStartIndex + nextIdx] - motionHd[activeStartIndex + prevIdx]) % 360;
     if (windowDelta > 180) windowDelta -= 360;
     if (windowDelta < -180) windowDelta += 360;
     
@@ -911,6 +979,54 @@
     return directions[idx];
   }
 
+  // --- True-scale vehicle sprites: grow the 24 px sprites to the vehicle's real length at high zoom ---
+  function metersPerPixel() {
+    return 40075016.686 * Math.abs(Math.cos(map.getCenter().lat * Math.PI / 180)) / (256 * Math.pow(2, map.getZoom()));
+  }
+  function spriteScale(lengthMeters) {
+    const px = lengthMeters / metersPerPixel();
+    return Math.max(1, Math.min(5, px / 24)).toFixed(3);
+  }
+
+  // --- Signal scenario overlay ---
+  // The lights render the client's account by default. The CR-4 narrative (left turn on a flashing yellow
+  // arrow while westbound through traffic had green) can be shown instead; neither is controller data.
+  function setLens(el, cls) { if (el) el.className = cls; }
+  function applySignalScenarioOverlay(gIdx) {
+    const u1Flash = document.getElementById('u1FlashLight');
+    const mapU1Flash = document.getElementById('mapU1Flash');
+    if (signalScenario !== 'cr4' || gIdx < 12773) {
+      setLens(u1Flash, 'signal-lens yellow flashing off');
+      setLens(mapU1Flash, 'map-signal-lens yellow flashing off');
+      return;
+    }
+    const beforeImpact = gIdx < 12782.8;
+    setLens(u1RedLight, 'signal-lens red off');
+    setLens(u1YellowLight, 'signal-lens yellow off');
+    setLens(u1Flash, 'signal-lens yellow flashing on');
+    setLens(u1GreenLight, 'signal-lens green off');
+    u1SignalLabel.className = 'signal-state-label yellow';
+    u1SignalLabel.textContent = 'FLASHING YELLOW ARROW';
+    setLens(u2RedLight, 'signal-lens red off');
+    setLens(u2YellowLight, 'signal-lens yellow off');
+    setLens(u2GreenLight, 'signal-lens green on');
+    u2SignalLabel.className = 'signal-state-label green';
+    u2SignalLabel.textContent = 'THROUGH GREEN';
+    signalPhaseBadge.className = 'badge-tag signal-badge yellow';
+    signalPhaseBadge.textContent = beforeImpact ? 'Permissive FYA (CR-4 narrative)' : 'Collision (CR-4 narrative)';
+    interlockBadge.textContent = 'NO CONFLICT';
+    interlockBadge.style.color = '#fbbf24';
+    signalInterlockExplain.innerHTML = beforeImpact
+      ? '<strong>CR-4 narrative:</strong> the left-turn head showed a flashing yellow arrow (permissive turn, yield to oncoming traffic) while westbound through traffic had green. This is the officer\'s account; it is not established by controller data either.'
+      : '<strong>CR-4 narrative:</strong> Unit 1 turned on a flashing yellow arrow and failed to yield to Unit 2, which had a green through indication. Which account is right depends on the controller\'s time-of-day plan and event logs.';
+    const mapU1Red = document.getElementById('mapU1Red'), mapU1Yellow = document.getElementById('mapU1Yellow'), mapU1Green = document.getElementById('mapU1Green'), mapU1Label = document.getElementById('mapU1Label');
+    const mapU2Red = document.getElementById('mapU2Red'), mapU2Yellow = document.getElementById('mapU2Yellow'), mapU2Green = document.getElementById('mapU2Green'), mapU2Label = document.getElementById('mapU2Label');
+    setLens(mapU1Red, 'map-signal-lens red off'); setLens(mapU1Yellow, 'map-signal-lens yellow off'); setLens(mapU1Flash, 'map-signal-lens yellow flashing on'); setLens(mapU1Green, 'map-signal-lens green off');
+    if (mapU1Label) { mapU1Label.textContent = 'FYA (CR-4)'; mapU1Label.style.color = '#fbbf24'; }
+    setLens(mapU2Red, 'map-signal-lens red off'); setLens(mapU2Yellow, 'map-signal-lens yellow off'); setLens(mapU2Green, 'map-signal-lens green on');
+    if (mapU2Label) { mapU2Label.textContent = 'THROUGH GREEN'; mapU2Label.style.color = '#34d399'; }
+  }
+
   // --- Update HUD, Animated Vehicles & Camera Scaling ---
   function updateUI(idxFloat) {
     if (activePoints.length === 0) return;
@@ -921,7 +1037,7 @@
     suvMarker.setLatLng([state.lat, state.lon]);
     const suvElem = document.getElementById('suvContainer');
     if (suvElem) {
-      suvElem.style.transform = `rotate(${state.hd}deg)`;
+      suvElem.style.transform = `rotate(${state.hd}deg) scale(${spriteScale(5.10)})`; // 2025 Atlas: 5.10 m long
       
       if (state.isBraking) suvElem.classList.add('braking');
       else suvElem.classList.remove('braking');
@@ -951,7 +1067,7 @@
       sedanMarker.setOpacity(1.0);
       const sedanElem = document.getElementById('sedanContainer');
       if (sedanElem) {
-        sedanElem.style.transform = `rotate(${state.sedanHeading}deg)`;
+        sedanElem.style.transform = `rotate(${state.sedanHeading}deg) scale(${spriteScale(4.91)})`; // BMW 550 (F10): 4.91 m long
       }
     } else {
       sedanMarker.setOpacity(0.0);
@@ -992,8 +1108,8 @@
 
         currentZoom = currentZoom + (targetZoom - currentZoom) * 0.06;
         
-        if (Math.abs(map.getZoom() - Math.round(currentZoom)) >= 1) {
-          map.setView([centerLat, centerLon], Math.round(currentZoom), { animate: false });
+        if (Math.abs(map.getZoom() - currentZoom) >= 0.05) {
+          map.setView([centerLat, centerLon], currentZoom, { animate: false });
         } else {
           map.panTo([centerLat, centerLon], { animate: false });
         }
@@ -1058,12 +1174,12 @@
           hudSedanBadge.textContent = '42.0 MPH';
           hudSedanBadge.style.background = 'rgba(245,158,11,0.25)';
           hudSedanBadge.style.color = '#fbbf24';
-          hudSedanDistance.textContent = `Cruising @ 42.0 MPH (late yellow attempt) | Approaching stop bar | Dist: ${state.sedanDistFt} ft`;
+          hudSedanDistance.textContent = `Simulated at 42 MPH (speed not logged; client estimate 40-45) | Approaching stop bar | Dist: ${state.sedanDistFt} ft`;
         } else {
-          hudSedanBadge.textContent = 'INEVITABLE IMPACT';
+          hudSedanBadge.textContent = 'IMPACT (DISPUTED)';
           hudSedanBadge.style.background = 'rgba(239,68,68,0.45)';
           hudSedanBadge.style.color = '#fff';
-          hudSedanDistance.textContent = `BMW continuing through light without slowing | Driver viewpoint: No avenue of escape`;
+          hudSedanDistance.textContent = `Client's account: BMW continued without slowing; no room to evade. Unit 2 path is simulated.`;
         }
       } else {
         hudSedanBadge.textContent = "12 O'CLOCK IMPACT";
@@ -1127,7 +1243,7 @@
 
         interlockBadge.textContent = 'DETECTOR ACTIVE';
         interlockBadge.style.color = '#38bdf8';
-        signalInterlockExplain.innerHTML = '<strong>West Stop Bar:</strong> Unit 1 stopped at West Terminal stop line for 26.0s on Red. In-pavement loop detector calls TxDOT master controller.';
+        signalInterlockExplain.innerHTML = '<strong>West Stop Bar (GPS):</strong> Unit 1 at 0 mph for 26 s at the west ramp terminal (04:59:18&ndash;04:59:43). Client\'s account: stopped on red; detection then called the controller.';
 
         if (mapWestRed) { mapWestRed.className = 'map-signal-lens red on'; mapWestYellow.className = 'map-signal-lens yellow off'; mapWestGreen.className = 'map-signal-lens green off'; if (mapWestLabel) { mapWestLabel.textContent = 'WEST: 26s RED'; mapWestLabel.style.color = '#f87171'; } }
         if (mapU1Red) { mapU1Red.className = 'map-signal-lens red on'; mapU1Yellow.className = 'map-signal-lens yellow off'; mapU1Green.className = 'map-signal-lens green off'; if (mapU1Label) { mapU1Label.textContent = 'EAST: RED'; mapU1Label.style.color = '#f87171'; } }
@@ -1163,7 +1279,7 @@
 
         interlockBadge.textContent = 'BRIDGE CRUISE';
         interlockBadge.style.color = '#38bdf8';
-        signalInterlockExplain.innerHTML = '<strong>Bridge Acceleration (39 MPH):</strong> West light turned Green. Driver accelerated across bridge. Ahead left-turn arrow is not yet green, holding queue.';
+        signalInterlockExplain.innerHTML = '<strong>Eastbound run (GPS):</strong> speed rises to 39 mph over ~362 m toward the east terminal. Client\'s account: west light green; the left-turn arrow ahead not yet green.';
 
         if (mapWestRed) { mapWestRed.className = 'map-signal-lens red off'; mapWestYellow.className = 'map-signal-lens yellow off'; mapWestGreen.className = 'map-signal-lens green on'; if (mapWestLabel) { mapWestLabel.textContent = 'WEST: GREEN'; mapWestLabel.style.color = '#34d399'; } }
         if (mapU1Red) { mapU1Red.className = 'map-signal-lens red on'; mapU1Yellow.className = 'map-signal-lens yellow off'; mapU1Green.className = 'map-signal-lens green off'; if (mapU1Label) { mapU1Label.textContent = 'TURN: RED'; mapU1Label.style.color = '#f87171'; } }
@@ -1198,7 +1314,7 @@
 
         interlockBadge.textContent = 'AMBER CLEARANCE';
         interlockBadge.style.color = '#fbbf24';
-        signalInterlockExplain.innerHTML = '<strong>Why You Slowed Down:</strong> Ahead lights displayed amber/orange. Driver decelerated from 39 to 23 MPH entering turn bay, waiting for the arrow to turn green.';
+        signalInterlockExplain.innerHTML = '<strong>Deceleration (GPS):</strong> 39 to 17 mph over 9 s (05:00:05&ndash;05:00:14). Client\'s account: slowed while waiting for the left-turn arrow to turn green. Signal state here is the client\'s account, not controller data.';
 
         if (mapWestRed) { mapWestRed.className = 'map-signal-lens red off'; mapWestYellow.className = 'map-signal-lens yellow off'; mapWestGreen.className = 'map-signal-lens green on'; if (mapWestLabel) { mapWestLabel.textContent = 'WEST: GREEN'; mapWestLabel.style.color = '#34d399'; } }
         if (mapU1Red) { mapU1Red.className = 'map-signal-lens red off'; mapU1Yellow.className = 'map-signal-lens yellow on'; mapU1Green.className = 'map-signal-lens green off'; if (mapU1Label) { mapU1Label.textContent = 'TURN: AMBER'; mapU1Label.style.color = '#fbbf24'; } }
@@ -1229,14 +1345,14 @@
         u2YellowLight.className = 'signal-lens yellow off';
         u2GreenLight.className = 'signal-lens green off';
         u2SignalLabel.className = 'signal-state-label red';
-        u2SignalLabel.textContent = 'SOLID RED (LOCKED)';
+        u2SignalLabel.textContent = 'RED (CLIENT\'S ACCOUNT)';
 
-        interlockBadge.textContent = '100% PROTECTED';
+        interlockBadge.textContent = 'PROTECTED (CLIENT)';
         interlockBadge.style.color = '#10b981';
         if (gIdx < 12781.5) {
-          signalInterlockExplain.innerHTML = '<strong>White Pavement Arrow:</strong> As your vehicle reached the painted pavement arrow, the Left-Turn Green Arrow illuminated! Driver initiated turn legally on green arrow.';
+          signalInterlockExplain.innerHTML = '<strong>Turn initiation (client\'s account):</strong> the left-turn arrow showed steady green as the vehicle reached the painted pavement arrow. The CR-4 narrative says a flashing yellow arrow; this head is a four-section FYA head, so both indications are possible and controller logs are needed to settle it.';
         } else {
-          signalInterlockExplain.innerHTML = '<strong>Point of Inevitable Collision (Street View Match):</strong> Vehicle is aligned North into ramp. Looking east, driver saw BMW continuing through the light without braking, realizing impact was unavoidable.';
+          signalInterlockExplain.innerHTML = '<strong>05:00:14 (client\'s account):</strong> vehicle aligned north into the ramp; looking east the driver saw the BMW continuing toward the intersection without braking. Positions and speed of Unit 2 are simulated, not logged.';
         }
 
         if (mapWestRed) { mapWestRed.className = 'map-signal-lens red off'; mapWestYellow.className = 'map-signal-lens yellow off'; mapWestGreen.className = 'map-signal-lens green on'; if (mapWestLabel) { mapWestLabel.textContent = 'WEST: GREEN'; mapWestLabel.style.color = '#34d399'; } }
@@ -1246,7 +1362,7 @@
       } else {
         // Stage 4: Collision Impact (05:00:15 AM onward)
         signalPhaseBadge.className = 'badge-tag signal-badge red';
-        signalPhaseBadge.textContent = 'RED LIGHT VIOLATION';
+        signalPhaseBadge.textContent = 'Collision (client\'s account)';
 
         if (westRedLight) {
           westRedLight.className = 'signal-lens red off';
@@ -1260,23 +1376,25 @@
         u1YellowLight.className = 'signal-lens yellow off';
         u1GreenLight.className = 'signal-lens green on';
         u1SignalLabel.className = 'signal-state-label green';
-        u1SignalLabel.textContent = 'GREEN ARROW (VIOLATED)';
+        u1SignalLabel.textContent = 'GREEN ARROW (CLIENT)';
 
         u2RedLight.className = 'signal-lens red on';
         u2YellowLight.className = 'signal-lens yellow off';
         u2GreenLight.className = 'signal-lens green off';
         u2SignalLabel.className = 'signal-state-label red';
-        u2SignalLabel.textContent = 'ILLEGAL RED RUNNING';
+        u2SignalLabel.textContent = 'RED (CLIENT\'S ACCOUNT)';
 
-        interlockBadge.textContent = 'SIGNAL VIOLATION';
+        interlockBadge.textContent = 'DISPUTED';
         interlockBadge.style.color = '#ef4444';
-        signalInterlockExplain.innerHTML = '<strong style="color:#ef4444;">Violation Confirmed:</strong> Unit 2 entered intersection at 50 MPH against Solid Red, T-boning Unit 1 under active green arrow.';
+        signalInterlockExplain.innerHTML = '<strong style="color:#ef4444;">Impact (client\'s account):</strong> Unit 2 entered the intersection without slowing (client estimate ~40&ndash;45 mph) and struck Unit 1\'s right side (CR-4: Unit 1 3 o\'clock, Unit 2 12 o\'clock). Whether Unit 2 faced red is unproven; the CR-4 attributes fault to Unit 1.';
 
         if (mapWestRed) { mapWestRed.className = 'map-signal-lens red off'; mapWestYellow.className = 'map-signal-lens yellow off'; mapWestGreen.className = 'map-signal-lens green on'; if (mapWestLabel) { mapWestLabel.textContent = 'WEST: GREEN'; mapWestLabel.style.color = '#34d399'; } }
         if (mapU1Red) { mapU1Red.className = 'map-signal-lens red off'; mapU1Yellow.className = 'map-signal-lens yellow off'; mapU1Green.className = 'map-signal-lens green on'; if (mapU1Label) { mapU1Label.textContent = 'GREEN ARROW'; mapU1Label.style.color = '#34d399'; } }
-        if (mapU2Red) { mapU2Red.className = 'map-signal-lens red on'; mapU2Yellow.className = 'map-signal-lens yellow off'; mapU2Green.className = 'map-signal-lens green off'; if (mapU2Label) { mapU2Label.textContent = 'VIOLATED RED'; mapU2Label.style.color = '#ef4444'; } }
+        if (mapU2Red) { mapU2Red.className = 'map-signal-lens red on'; mapU2Yellow.className = 'map-signal-lens yellow off'; mapU2Green.className = 'map-signal-lens green off'; if (mapU2Label) { mapU2Label.textContent = 'RED (CLIENT)'; mapU2Label.style.color = '#ef4444'; } }
       }
     }
+
+    applySignalScenarioOverlay(activeStartIndex + idxFloat);
 
     // Compass
     const cardinal = getCardinalDirection(state.hd);
@@ -1629,6 +1747,26 @@
     if (e.target === evidenceModal) evidenceModal.classList.remove('active');
   });
 
+  // --- Night lighting & signal scenario controls ---
+  function applyNightMode() {
+    document.body.classList.toggle('night-mode', isNightMode);
+    const btn = document.getElementById('btnNightMode');
+    const mbtn = document.getElementById('btnMobileNightMode');
+    if (btn) btn.classList.toggle('active', isNightMode);
+    if (mbtn) mbtn.classList.toggle('active', isNightMode);
+  }
+  ['btnNightMode', 'btnMobileNightMode'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('click', () => { isNightMode = !isNightMode; applyNightMode(); });
+  });
+  const signalScenarioSelect = document.getElementById('signalScenarioSelect');
+  if (signalScenarioSelect) {
+    signalScenarioSelect.addEventListener('change', (e) => {
+      signalScenario = e.target.value === 'cr4' ? 'cr4' : 'client';
+      updateUI(currentIndex);
+    });
+  }
+
   // --- Mobile Controls & Drawer Integration ---
   const btnMobileImpact = document.getElementById('btnMobileImpact');
   if (btnMobileImpact) {
@@ -1779,9 +1917,19 @@
   isAutoStopImpactEnabled = true;
   if (btnAutoStopImpact) btnAutoStopImpact.classList.add('active');
   if (btnMobileAutoStopImpact) btnMobileAutoStopImpact.classList.add('active');
-  presetSelect.value = 'accident_focus';
-  if (mobilePresetSelect) mobilePresetSelect.value = 'accident_focus';
-  applyPreset('accident_focus', 12648);
+  // Deep links: ?at=<global record index | impact>  ?scenario=client|cr4  ?night=0|1
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('scenario') === 'cr4') { signalScenario = 'cr4'; if (signalScenarioSelect) signalScenarioSelect.value = 'cr4'; }
+  if (params.get('night') === '0') isNightMode = false;
+  let startIdx = 12648;
+  const atParam = params.get('at');
+  if (atParam === 'impact') startIdx = IMPACT_GLOBAL_INDEX;
+  else if (atParam && !isNaN(parseInt(atParam, 10))) startIdx = Math.max(0, Math.min(allPoints.length - 1, parseInt(atParam, 10)));
+  const startPreset = (startIdx >= 12648 && startIdx <= 12888) ? 'accident_focus' : (startIdx >= 11568 ? 'pre_crash_leg' : 'full_journey');
+  presetSelect.value = startPreset;
+  if (mobilePresetSelect) mobilePresetSelect.value = startPreset;
+  applyNightMode();
+  applyPreset(startPreset, startIdx);
   requestAnimationFrame(animationLoop);
 
 })();

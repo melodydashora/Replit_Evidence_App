@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Master Legal Evidence Repository & Case Portal | Dashora v. Savala-Fitzpatrick</title>
+<title>Case Evidence Portal | Dashora v. Savala-Fitzpatrick</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -246,6 +246,16 @@
     padding-top: 20px;
     border-top: 1px solid var(--border-color);
   }
+  .meta-note { color:#94a3b8; font-weight:400; font-size:12px; }
+  .section-sub { color:#64748b; font-size:12px; font-weight:400; }
+  .notice {
+    margin-top:22px; padding:16px 18px; border-radius:10px;
+    background: rgba(245, 158, 11, 0.08); border:1px solid rgba(245, 158, 11, 0.35);
+  }
+  .notice-title { font-weight:700; color:#fbbf24; font-size:14px; margin-bottom:8px; }
+  .notice ol { margin:0 0 0 20px; padding:0; color:#e2e8f0; font-size:13px; line-height:1.55; }
+  .notice li { margin-bottom:6px; }
+  .notice li:last-child { margin-bottom:0; }
 </style>
 </head>
 <body>
@@ -255,44 +265,54 @@
   <div class="header-card">
     <div class="header-top">
       <div>
-        <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
-          <span class="badge-privileged"><i class="fa-solid fa-lock"></i> Attorney-Client Privileged</span>
-          <span class="badge-certified"><i class="fa-solid fa-certificate"></i> Certified Evidence Repository</span>
+        <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-wrap:wrap;">
+          <span class="badge-privileged"><i class="fa-solid fa-lock"></i> Confidential &middot; Prepared for Counsel &amp; Claims Review</span>
+          <span class="badge-certified"><i class="fa-solid fa-certificate"></i> Evidence Repository &middot; TxDOT-Certified CR-4 Included</span>
         </div>
-        <h1>Master Forensic Evidence & Legal Portfolio</h1>
+        <h1>Master Evidence &amp; Claim Portfolio</h1>
         <p style="color:#cbd5e1; font-size:14px; margin-top:4px;">
-          Collision on August 28, 2026 (05:00:15 AM CDT) · SH-121 & Bass Pro Dr / W Bethel Rd, Grapevine, TX
+          Two-vehicle collision on August 28, 2026 at 05:00 AM CDT (GPS log: 05:00:15) &middot; SH 121 frontage road at Bass Pro Drive, Grapevine, TX (Tarrant County)
         </p>
       </div>
     </div>
 
     <div class="case-meta">
       <div class="case-meta-item"><strong>TxDOT Crash ID:</strong> 21609720.1</div>
-      <div class="case-meta-item"><strong>Grapevine PD Case:</strong> 2600037671</div>
-      <div class="case-meta-item"><strong>Client:</strong> Melody Dawn Dashora</div>
-      <div class="case-meta-item"><strong>Vehicle:</strong> 2025 VW Atlas SE (FWD, Black)</div>
-      <div class="case-meta-item"><strong>Adverse Driver:</strong> Tamika Savala-Fitzpatrick (UNINSURED)</div>
-      <div class="case-meta-item"><strong>First-Party UM Policy:</strong> Progressive #936659747 ($250k/$500k UM)</div>
+      <div class="case-meta-item"><strong>Grapevine PD Case:</strong> 2600037671 (Officer R. Smith #14177)</div>
+      <div class="case-meta-item"><strong>Client (Unit 1):</strong> Melody Dawn Dashora</div>
+      <div class="case-meta-item"><strong>Vehicle:</strong> 2025 VW Atlas SE FWD, Black, TX WHB6147 <span class="meta-note">(CR-4 entry reads &ldquo;Silver&rdquo;)</span></div>
+      <div class="case-meta-item"><strong>Adverse Driver (Unit 2):</strong> Tamika Savala-Fitzpatrick, 2014 BMW 550 <span class="meta-note">(CR-4: Proof of Financial Responsibility &mdash; NO)</span></div>
+      <div class="case-meta-item"><strong>First-Party Policy:</strong> Progressive #936659747 <span class="meta-note">(app screenshots: UM/UIM BI $250,007/$500,007, PIP $10,003, Ridesharing: Yes)</span></div>
     </div>
 
     <div class="action-row">
       <a href="00_START_HERE_CASE_OVERVIEW_AND_OFFICIAL_DOSSIER/OFFICIAL_STATEMENT_OF_FACTS_AND_CASE_DOSSIER.pdf" target="_blank" class="btn-primary">
-        <i class="fa-solid fa-file-pdf"></i> Open Official Case Dossier (16-Page Master Brief)
+        <i class="fa-solid fa-file-pdf"></i> Open Case Dossier (Client Memorandum, PDF)
       </a>
-      <a href="01_Interactive_Accident_Reconstruction/index.html" target="_blank" class="btn-primary" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%);">
-        <i class="fa-solid fa-play"></i> Launch Interactive 3D/2D Accident Reconstruction
+      <a href="index.html" target="_blank" class="btn-primary" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%);">
+        <i class="fa-solid fa-play"></i> Launch Interactive 2D GPS Reconstruction
       </a>
       <a href="02_Certified_Police_Report_And_Crash_Records/Certified_Police_Report_TxDOT_21609720_1.pdf" target="_blank" class="btn-secondary">
-        <i class="fa-solid fa-shield-halved"></i> View Certified Police Report (CR-4)
+        <i class="fa-solid fa-shield-halved"></i> View TxDOT-Certified Crash Report (CR-4)
       </a>
       <a href="00_START_HERE_CASE_OVERVIEW_AND_OFFICIAL_DOSSIER/INSTRUCTIONS_FOR_ATTORNEY.txt" target="_blank" class="btn-secondary">
-        <i class="fa-solid fa-clipboard-list"></i> Attorney Action Checklist
+        <i class="fa-solid fa-clipboard-list"></i> Attorney Instructions
       </a>
+    </div>
+
+    <div class="notice">
+      <div class="notice-title"><i class="fa-solid fa-triangle-exclamation"></i> Read first &mdash; open issues that decide this claim</div>
+      <ol>
+        <li><strong>The CR-4 narrative attributes fault to Unit 1:</strong> &ldquo;Unit 1 failed to yield right of way while turning left on a flashing yellow light.&rdquo; The eastbound left-turn signal at this ramp terminal is a four-section flashing-yellow-arrow head (Binder 09 Street View exhibit), so a flashing yellow arrow was possible at that head. Whether it showed a steady green arrow or a flashing yellow arrow at 05:00:11&ndash;05:00:15 can only be settled by the signal controller&rsquo;s time-of-day plan and event logs (requests drafted in Binders 10 and 11). The CR-4 itself codes traffic control as &ldquo;Signal Light&rdquo;.</li>
+        <li><strong>Uber coverage period is undetermined:</strong> the canceled $12.07 request receipt (Binder 05) shows one timestamp, 5:05 AM. If that is the request time, the request came after the 05:00:15 impact (Period 1); if it is the cancellation time, an accepted request may have been pending (Period 2). Uber&rsquo;s server-side log is needed.</li>
+        <li><strong>The statement of facts is unsigned</strong> (Dossier &sect;6). Counsel should have it executed before it is presented as signed.</li>
+        <li><strong>Vehicle colour conflict:</strong> the CR-4 lists the Atlas as Silver; the repair estimates and the 08/24/2026 photos show it is Black (Deep Black Pearl). A CR-4 correction request may be warranted.</li>
+      </ol>
     </div>
   </div>
 
   <!-- Folder Grid -->
-  <div class="section-title"><i class="fa-solid fa-folder-tree"></i> Categorized Legal Evidence Binders</div>
+  <div class="section-title"><i class="fa-solid fa-folder-tree"></i> Categorized Evidence Binders <span class="section-sub">&middot; every link below was checked against the files on 09/04/2026</span></div>
 
   <div class="grid">
 
@@ -301,58 +321,52 @@
       <div>
         <div class="folder-header">
           <i class="fa-solid fa-star folder-icon" style="color:#f59e0b;"></i>
-          <div>
-            <div class="folder-title">00. Start Here: Case Overview & Master Dossier</div>
-          </div>
+          <div><div class="folder-title">00. Start Here: Case Dossier &amp; Attorney Instructions</div></div>
         </div>
         <div class="folder-desc">
-          Primary starting point for counsel and claims examiner. Contains the formal signed statement of facts, liability refutation, medical summary, and action plan.
+          Client-prepared &ldquo;Official Statement of Facts &amp; Case Dossier&rdquo; (PDF rebuilt from the Markdown source on 09/04/2026) containing an unsigned first-person statement of facts (&sect;6), a rebuttal of the CR-4 narrative (&sect;7), a summary of the 08/28/2026 Baylor ER visit (&sect;9) and a case action plan with checklist (&sect;16), plus viewing instructions, a forensic timeline and time-sensitive subpoena contacts for counsel.
         </div>
         <div class="file-pills">
-          <a href="00_START_HERE_CASE_OVERVIEW_AND_OFFICIAL_DOSSIER/OFFICIAL_STATEMENT_OF_FACTS_AND_CASE_DOSSIER.pdf" target="_blank" class="pill"><i class="fa-solid fa-file-pdf"></i> Official Dossier PDF</a>
+          <a href="00_START_HERE_CASE_OVERVIEW_AND_OFFICIAL_DOSSIER/OFFICIAL_STATEMENT_OF_FACTS_AND_CASE_DOSSIER.pdf" target="_blank" class="pill"><i class="fa-solid fa-file-pdf"></i> Case Dossier PDF</a>
+          <a href="00_START_HERE_CASE_OVERVIEW_AND_OFFICIAL_DOSSIER/OFFICIAL_STATEMENT_OF_FACTS_AND_CASE_DOSSIER.md" target="_blank" class="pill"><i class="fa-solid fa-file-lines"></i> Case Dossier Markdown (source)</a>
           <a href="00_START_HERE_CASE_OVERVIEW_AND_OFFICIAL_DOSSIER/INSTRUCTIONS_FOR_ATTORNEY.txt" target="_blank" class="pill"><i class="fa-solid fa-file-lines"></i> Attorney Instructions</a>
-          <a href="00_START_HERE_CASE_OVERVIEW_AND_OFFICIAL_DOSSIER/OFFICIAL_STATEMENT_OF_FACTS_AND_CASE_DOSSIER.md" target="_blank" class="pill"><i class="fa-solid fa-file-lines"></i> Dossier Markdown</a>
         </div>
       </div>
       <a href="00_START_HERE_CASE_OVERVIEW_AND_OFFICIAL_DOSSIER/index.html" class="folder-link">Browse Folder <i class="fa-solid fa-arrow-right"></i></a>
     </div>
 
-    <!-- Folder 01 -->
+    <!-- Folder 01 (the app lives at the repository root) -->
     <div class="folder-card">
       <div>
         <div class="folder-header">
           <i class="fa-solid fa-laptop-code folder-icon" style="color:#38bdf8;"></i>
-          <div>
-            <div class="folder-title">01. Interactive Accident Reconstruction</div>
-          </div>
+          <div><div class="folder-title">01. Interactive Accident Reconstruction</div></div>
         </div>
         <div class="folder-desc">
-          Self-contained interactive visualizer and sub-second simulator. Displays vehicle trajectories, diamond signal interlocks, MMU hardware logic, and camera markers.
+          Browser-based replay (needs an internet connection for map tiles, Leaflet and fonts) of the client vehicle&rsquo;s 13,285-record 1 Hz GPS log interpolated to 60 FPS, with a simulated non-GPS path for the adverse BMW and a scripted signal-phase illustration of the client&rsquo;s account. The signal display is not derived from controller logs.
         </div>
         <div class="file-pills">
-          <a href="01_Interactive_Accident_Reconstruction/index.html" target="_blank" class="pill"><i class="fa-solid fa-play"></i> Launch Reconstruction</a>
-          <a href="01_Interactive_Accident_Reconstruction/telemetry_engine.js" target="_blank" class="pill"><i class="fa-solid fa-code"></i> Telemetry Engine</a>
-          <a href="01_Interactive_Accident_Reconstruction/gps_full_data.js" target="_blank" class="pill"><i class="fa-solid fa-database"></i> 13k GPS Data</a>
-          <a href="01_Interactive_Accident_Reconstruction/dashcam_post_accident.png" target="_blank" class="pill"><i class="fa-solid fa-image"></i> Dashcam Exhibit</a>
+          <a href="index.html" target="_blank" class="pill"><i class="fa-solid fa-play"></i> Launch Reconstruction</a>
+          <a href="telemetry_engine.js" target="_blank" class="pill"><i class="fa-solid fa-code"></i> Telemetry Engine (JS)</a>
+          <a href="gps_full_data.js" target="_blank" class="pill"><i class="fa-solid fa-database"></i> GPS Dataset (13,285 pts, JS)</a>
+          <a href="03_Sub_Second_GPS_Telematics_And_Kinematics/Exhibit_A_Dashcam_Post_Accident_Photo_050543.png" target="_blank" class="pill"><i class="fa-solid fa-image"></i> Dashcam Still 05:05:43</a>
         </div>
       </div>
-      <a href="01_Interactive_Accident_Reconstruction/index.html" target="_blank" class="folder-link">Open Reconstruction <i class="fa-solid fa-arrow-right"></i></a>
+      <a href="index.html" target="_blank" class="folder-link">Open Reconstruction <i class="fa-solid fa-arrow-right"></i></a>
     </div>
 
     <!-- Folder 02 -->
     <div class="folder-card">
       <div>
         <div class="folder-header">
-          <i class="fa-solid fa-file-shield folder-icon" style="color:#6366f1;"></i>
-          <div>
-            <div class="folder-title">02. Certified Police Report & Crash Records</div>
-          </div>
+          <i class="fa-solid fa-file-shield folder-icon" style="color:#818cf8;"></i>
+          <div><div class="folder-title">02. Certified Police Crash Report (CR-4)</div></div>
         </div>
         <div class="folder-desc">
-          Certified Texas Peace Officer's Crash Report (Form CR-4). Documents Unit 2 Proof of Financial Responsibility: NO, 12 vs 3 O'Clock damage vectors, and witness.
+          TxDOT-certified copy (custodian Jim Markham, 09/02/2026) of Grapevine PD&rsquo;s Texas Peace Officer&rsquo;s Crash Report, Form CR-4. Records Unit 2 Proof of Financial Responsibility: NO; damage Unit 1 3 o&rsquo;clock right-front-quarter angular impact, Unit 2 12 o&rsquo;clock front-end distributed impact; witness Precious Mccall; conditions dark-lighted, traffic control &ldquo;Signal Light&rdquo;. The narrative and contributing factors attribute fault to Unit 1 (left turn on a flashing yellow light).
         </div>
         <div class="file-pills">
-          <a href="02_Certified_Police_Report_And_Crash_Records/Certified_Police_Report_TxDOT_21609720_1.pdf" target="_blank" class="pill"><i class="fa-solid fa-file-pdf"></i> Certified CR-4 Police Report</a>
+          <a href="02_Certified_Police_Report_And_Crash_Records/Certified_Police_Report_TxDOT_21609720_1.pdf" target="_blank" class="pill"><i class="fa-solid fa-file-pdf"></i> Certified CR-4 (4 pp)</a>
         </div>
       </div>
       <a href="02_Certified_Police_Report_And_Crash_Records/index.html" class="folder-link">Browse Folder <i class="fa-solid fa-arrow-right"></i></a>
@@ -363,17 +377,15 @@
       <div>
         <div class="folder-header">
           <i class="fa-solid fa-satellite-dish folder-icon" style="color:#10b981;"></i>
-          <div>
-            <div class="folder-title">03. Sub-Second GPS Telematics & Kinematics</div>
-          </div>
+          <div><div class="folder-title">03. 1 Hz GPS Telematics &amp; Kinematics</div></div>
         </div>
         <div class="folder-desc">
-          13,285 continuous 1Hz GPS telemetry points capturing 26s stop, bridge crossing, 9-second linear deceleration, and impact orientation at 0.0° North.
+          13,285 one-second GPS records (00:13&ndash;05:09 CDT; speed logged in knots, no heading column; three gaps, but the 02:56&ndash;05:03 segment covering the stop, approach and impact is gap-free). Shows a 26-second stop at 04:59:18&ndash;04:59:43, a ~362 m eastbound run, a 9-second deceleration from 39.1 to 17.2 mph (05:00:05&ndash;05:00:14) and zero speed from 05:00:15. Heading at impact is derived, not logged.
         </div>
         <div class="file-pills">
-          <a href="03_Sub_Second_GPS_Telematics_And_Kinematics/gps-20260828_13285_Records.csv" target="_blank" class="pill"><i class="fa-solid fa-file-csv"></i> 13,285 GPS Log (CSV)</a>
-          <a href="03_Sub_Second_GPS_Telematics_And_Kinematics/FORMAL TECHNICAL STATEMENT AND ACCIDENT RECONSTRUCTION ANALYSIS.pdf" target="_blank" class="pill"><i class="fa-solid fa-file-pdf"></i> Technical Analysis PDF</a>
-          <a href="03_Sub_Second_GPS_Telematics_And_Kinematics/Exhibit_A_Dashcam_Post_Accident_Photo_050543.png" target="_blank" class="pill"><i class="fa-solid fa-image"></i> Exhibit A Dashcam Photo</a>
+          <a href="03_Sub_Second_GPS_Telematics_And_Kinematics/gps-20260828_13285_Records.csv" target="_blank" class="pill"><i class="fa-solid fa-file-csv"></i> GPS Log CSV (13,285 rows)</a>
+          <a href="03_Sub_Second_GPS_Telematics_And_Kinematics/FORMAL TECHNICAL STATEMENT AND ACCIDENT RECONSTRUCTION ANALYSIS.pdf" target="_blank" class="pill"><i class="fa-solid fa-file-pdf"></i> Technical Statement PDF (unsigned)</a>
+          <a href="03_Sub_Second_GPS_Telematics_And_Kinematics/Exhibit_A_Dashcam_Post_Accident_Photo_050543.png" target="_blank" class="pill"><i class="fa-solid fa-image"></i> Exhibit A: Dashcam Still 05:05:43</a>
         </div>
       </div>
       <a href="03_Sub_Second_GPS_Telematics_And_Kinematics/index.html" class="folder-link">Browse Folder <i class="fa-solid fa-arrow-right"></i></a>
@@ -383,18 +395,18 @@
     <div class="folder-card">
       <div>
         <div class="folder-header">
-          <i class="fa-solid fa-car folder-icon" style="color:#ec4899;"></i>
-          <div>
-            <div class="folder-title">04. Vehicle Records & Prior Repairs Segregation</div>
-          </div>
+          <i class="fa-solid fa-car-burst folder-icon" style="color:#f472b6;"></i>
+          <div><div class="folder-title">04. Vehicle Records &amp; Prior Repair Estimates</div></div>
         </div>
         <div class="folder-desc">
-          Certified repair estimates from Prosper and Hendrick VW proving prior damage was strictly LEFT-SIDE, while current total loss is 100% RIGHT-SIDE (Zero overlap).
+          Progressive/Mitchell estimates for two prior claims &mdash; The Body Shop #2, Prosper (claim 26-647168303-01, loss 01/26/2026, point of impact: Left Side) and Hendrick Volkswagen Frisco (claim 26-711114628-01, loss 07/23/2026, point of impact: Left Front Corner) &mdash; plus 10 pre-accident photos taken 08/24/2026 and 7 myVW app service-history screenshots. No post-crash appraisal or total-loss valuation is on file yet.
         </div>
         <div class="file-pills">
-          <a href="04_Vehicle_Records_Prior_Repairs_And_Inspection/2026-VehicleRepairs/" target="_blank" class="pill"><i class="fa-solid fa-folder"></i> Repair Estimates (Prosper & Hendrick)</a>
-          <a href="04_Vehicle_Records_Prior_Repairs_And_Inspection/PreAccidentPictures/" target="_blank" class="pill"><i class="fa-solid fa-images"></i> 11 Pre-Accident Photos</a>
-          <a href="04_Vehicle_Records_Prior_Repairs_And_Inspection/Vehicle2026-History/" target="_blank" class="pill"><i class="fa-solid fa-clock-rotate-left"></i> Vehicle History Logs</a>
+          <a href="04_Vehicle_Records_Prior_Repairs_And_Inspection/2026-VehicleRepairs/RepairEstimate-26-647168303-57-LeftSide.pdf" target="_blank" class="pill"><i class="fa-solid fa-file-pdf"></i> Prosper Estimate (01/2026, Left Side)</a>
+          <a href="04_Vehicle_Records_Prior_Repairs_And_Inspection/2026-VehicleRepairs/ESTIMATE - 2025 VW ATLAS-original.pdf" target="_blank" class="pill"><i class="fa-solid fa-file-pdf"></i> Hendrick Estimate (07/2026, Left Front)</a>
+          <a href="04_Vehicle_Records_Prior_Repairs_And_Inspection/2026-VehicleRepairs/ESTIMATE - 2025 VW ATLAS.pdf S1.pdf" target="_blank" class="pill"><i class="fa-solid fa-file-pdf"></i> Hendrick Supplement S1</a>
+          <a href="04_Vehicle_Records_Prior_Repairs_And_Inspection/PreAccidentPictures/" target="_blank" class="pill"><i class="fa-solid fa-images"></i> 10 Pre-Accident Photos (08/24/2026)</a>
+          <a href="04_Vehicle_Records_Prior_Repairs_And_Inspection/Vehicle2026-History/" target="_blank" class="pill"><i class="fa-solid fa-mobile-screen"></i> myVW Service History (7 screenshots)</a>
         </div>
       </div>
       <a href="04_Vehicle_Records_Prior_Repairs_And_Inspection/index.html" class="folder-link">Browse Folder <i class="fa-solid fa-arrow-right"></i></a>
@@ -404,18 +416,18 @@
     <div class="folder-card">
       <div>
         <div class="folder-header">
-          <i class="fa-solid fa-taxi folder-icon" style="color:#eab308;"></i>
-          <div>
-            <div class="folder-title">05. Uber Commercial Dispatch & Coverage</div>
-          </div>
+          <i class="fa-solid fa-taxi folder-icon" style="color:#fbbf24;"></i>
+          <div><div class="folder-title">05. Uber Dispatch Status &amp; Commercial Coverage</div></div>
         </div>
         <div class="folder-desc">
-          Confirms active Period 2 dispatch at impact ($12.07 fare; Aloft Hotel to DFW Airport), Certificate of Insurance, and technical explanation of $0.00 cancellation receipt artifact.
+          Uber Driver app screenshots of two 08/28/2026 trips: a completed 4:18 AM trip and a canceled UberX request timestamped 5:05 AM (upfront fare $12.07, $0.00 collected, pickup and drop-off fields both &ldquo;N State Highway 121, Coppell&rdquo;, map pin beside Aloft Dallas DFW Airport Grapevine); Uber&rsquo;s Texas Certificate of Insurance; and a 09/01/2026 evidence-and-insurance plan. Whether 5:05 AM is the request or the cancellation time is undetermined and decides Period 1 vs Period 2.
         </div>
         <div class="file-pills">
+          <a href="05_Uber_Commercial_Dispatch_And_Coverage/IMG_9364.png" target="_blank" class="pill"><i class="fa-solid fa-image"></i> Canceled $12.07 Request (5:05 AM)</a>
+          <a href="05_Uber_Commercial_Dispatch_And_Coverage/IMG_9363.png" target="_blank" class="pill"><i class="fa-solid fa-image"></i> Prior Completed Trip (4:18 AM)</a>
+          <a href="05_Uber_Commercial_Dispatch_And_Coverage/IMG_9355.jpeg" target="_blank" class="pill"><i class="fa-solid fa-image"></i> Intersection Map Screenshot</a>
           <a href="05_Uber_Commercial_Dispatch_And_Coverage/Uber_Texas_Certificate_of_Insurance_COI.pdf" target="_blank" class="pill"><i class="fa-solid fa-file-pdf"></i> Uber Texas COI</a>
-          <a href="05_Uber_Commercial_Dispatch_And_Coverage/UBER-PLAN.md" target="_blank" class="pill"><i class="fa-solid fa-file-lines"></i> Uber Period 2 Plan</a>
-          <a href="05_Uber_Commercial_Dispatch_And_Coverage/IMG_9363.png" target="_blank" class="pill"><i class="fa-solid fa-image"></i> Active Dispatch Screenshot</a>
+          <a href="05_Uber_Commercial_Dispatch_And_Coverage/UBER-PLAN.md" target="_blank" class="pill"><i class="fa-solid fa-file-lines"></i> Uber Evidence &amp; Insurance Plan</a>
         </div>
       </div>
       <a href="05_Uber_Commercial_Dispatch_And_Coverage/index.html" class="folder-link">Browse Folder <i class="fa-solid fa-arrow-right"></i></a>
@@ -425,19 +437,19 @@
     <div class="folder-card">
       <div>
         <div class="folder-header">
-          <i class="fa-solid fa-notes-medical folder-icon" style="color:#ef4444;"></i>
-          <div>
-            <div class="folder-title">06. Medical Records & Clinical Evidence</div>
-          </div>
+          <i class="fa-solid fa-kit-medical folder-icon" style="color:#ef4444;"></i>
+          <div><div class="folder-title">06. Medical Records</div></div>
         </div>
         <div class="folder-desc">
-          Complete medical records: Baylor Scott & White ER chart, Texas Health Presbyterian follow-up, UTSW records, and objective photographic proof of seat belt sign ecchymosis.
+          Patient-portal records from three post-collision visits: Baylor Scott &amp; White Medical Center &ndash; Grapevine ED after-visit summary (08/28/2026); Texas Health Frisco Emergency Department after-visit summary and ED provider notes (08/30/2026); UT Southwestern primary-care after-visit summary and progress note (09/02/2026); plus one client photo dated 08/29/2026 of a linear neck bruise. No custodian-certified charts are on file yet.
         </div>
         <div class="file-pills">
-          <a href="06_Medical_Records_And_Clinical_Evidence/BaylorNotes.pdf" target="_blank" class="pill"><i class="fa-solid fa-file-pdf"></i> Baylor Scott & White ER Notes</a>
-          <a href="06_Medical_Records_And_Clinical_Evidence/Texas Presb ER Notes Aug 30, 2026.pdf" target="_blank" class="pill"><i class="fa-solid fa-file-pdf"></i> Texas Health Presb ER Notes</a>
-          <a href="06_Medical_Records_And_Clinical_Evidence/UTSW After Visit Summary Sep 2, 2026.pdf" target="_blank" class="pill"><i class="fa-solid fa-file-pdf"></i> UTSW After Visit Summary</a>
-          <a href="06_Medical_Records_And_Clinical_Evidence/Pictures_Of_Bruises/IMG_9304.jpeg" target="_blank" class="pill"><i class="fa-solid fa-image"></i> Seat Belt Sign Ecchymosis Photo</a>
+          <a href="06_Medical_Records_And_Clinical_Evidence/ed after visit summary aug 28, 2026.pdf" target="_blank" class="pill"><i class="fa-solid fa-file-pdf"></i> Baylor Grapevine ED Summary 8/28</a>
+          <a href="06_Medical_Records_And_Clinical_Evidence/Texas Presb ED AVS Aug 30, 2026.pdf" target="_blank" class="pill"><i class="fa-solid fa-file-pdf"></i> Texas Health Frisco ED Summary 8/30</a>
+          <a href="06_Medical_Records_And_Clinical_Evidence/Texas Presb ER Notes Aug 30, 2026.pdf" target="_blank" class="pill"><i class="fa-solid fa-file-pdf"></i> Texas Health Frisco ED Notes 8/30</a>
+          <a href="06_Medical_Records_And_Clinical_Evidence/UTSW After Visit Summary Sep 2, 2026.pdf" target="_blank" class="pill"><i class="fa-solid fa-file-pdf"></i> UTSW After Visit Summary 9/2</a>
+          <a href="06_Medical_Records_And_Clinical_Evidence/UTSW_Progress_Note_Sep_2_2026.pdf" target="_blank" class="pill"><i class="fa-solid fa-file-pdf"></i> UTSW Progress Note 9/2</a>
+          <a href="06_Medical_Records_And_Clinical_Evidence/Pictures_Of_Bruises/IMG_9304.jpeg" target="_blank" class="pill"><i class="fa-solid fa-image"></i> Neck Bruise Photo 8/29</a>
         </div>
       </div>
       <a href="06_Medical_Records_And_Clinical_Evidence/index.html" class="folder-link">Browse Folder <i class="fa-solid fa-arrow-right"></i></a>
@@ -447,16 +459,14 @@
     <div class="folder-card">
       <div>
         <div class="folder-header">
-          <i class="fa-solid fa-receipt folder-icon" style="color:#14b8a6;"></i>
-          <div>
-            <div class="folder-title">07. Medical Expenses & Billing Ledger</div>
-          </div>
+          <i class="fa-solid fa-receipt folder-icon" style="color:#34d399;"></i>
+          <div><div class="folder-title">07. Medical Expenses &amp; Billing</div></div>
         </div>
         <div class="folder-desc">
-          Itemized medical billing statements, Baylor Health emergency charges, hospital lien records, and PIP reimbursement ledger ($10,003 no-fault benefit).
+          Baylor Scott &amp; White Health patient-portal billing screenshot showing $13,528.55 due (Guarantor #121682647; statement dated 09/01/2026), believed to be the 08/28/2026 Grapevine ER encounter. The itemized statement, PIP claim records and any hospital-lien notice are not yet on file.
         </div>
         <div class="file-pills">
-          <a href="07_Medical_Expenses_And_Billing/Baylor_Health_Emergency_Bill.png" target="_blank" class="pill"><i class="fa-solid fa-image"></i> Baylor ER Emergency Bill</a>
+          <a href="07_Medical_Expenses_And_Billing/Baylor_Health_Emergency_Bill.png" target="_blank" class="pill"><i class="fa-solid fa-image"></i> BSW Billing Screenshot ($13,528.55)</a>
         </div>
       </div>
       <a href="07_Medical_Expenses_And_Billing/index.html" class="folder-link">Browse Folder <i class="fa-solid fa-arrow-right"></i></a>
@@ -466,16 +476,17 @@
     <div class="folder-card">
       <div>
         <div class="folder-header">
-          <i class="fa-solid fa-shield-halved folder-icon" style="color:#3b82f6;"></i>
-          <div>
-            <div class="folder-title">08. Progressive Policy & First-Party Coverage</div>
-          </div>
+          <i class="fa-solid fa-shield-halved folder-icon" style="color:#38bdf8;"></i>
+          <div><div class="folder-title">08. Progressive Policy &amp; First-Party Coverage</div></div>
         </div>
         <div class="folder-desc">
-          Progressive Policy #936659747 declarations showing active Rideshare endorsement (Ridesharing: Yes), $250k/$500k UM coverage, $10,003 PIP, and Texas UM law analysis.
+          Nine Progressive app/web screenshots for the 2025 Atlas (VIN 1V2DR2CA0SC529343): coverage at time of incident (08/28/2026) showing UM/UIM bodily injury $250,007/$500,007 and PIP $10,003; the vehicle record with &ldquo;Ridesharing: Yes&rdquo;; and claim 26-854858569 screens (payout $0.00 to date). No declarations page or endorsement forms yet; policy no. 936659747 comes from the CR-4. One screenshot shows a different claim number (26-343820011, dated Aug 27) that still needs explaining.
         </div>
         <div class="file-pills">
-          <a href="08_Progressive_Policy_And_First_Party_Coverage/Progressive_Policy_Declarations_And_Endorsements/" target="_blank" class="pill"><i class="fa-solid fa-folder"></i> Progressive Declarations (Rideshare: Yes)</a>
+          <a href="08_Progressive_Policy_And_First_Party_Coverage/Progressive_Policy_Declarations_And_Endorsements/IMG_9289.png" target="_blank" class="pill"><i class="fa-solid fa-image"></i> Coverage at Time of Incident</a>
+          <a href="08_Progressive_Policy_And_First_Party_Coverage/Progressive_Policy_Declarations_And_Endorsements/IMG_9295.png" target="_blank" class="pill"><i class="fa-solid fa-image"></i> Vehicle Record (Ridesharing: Yes)</a>
+          <a href="08_Progressive_Policy_And_First_Party_Coverage/Progressive_Policy_Declarations_And_Endorsements/IMG_9383.png" target="_blank" class="pill"><i class="fa-solid fa-image"></i> Claim 26-854858569</a>
+          <a href="08_Progressive_Policy_And_First_Party_Coverage/Progressive_Policy_Declarations_And_Endorsements/" target="_blank" class="pill"><i class="fa-solid fa-images"></i> All 9 Screenshots</a>
         </div>
       </div>
       <a href="08_Progressive_Policy_And_First_Party_Coverage/index.html" class="folder-link">Browse Folder <i class="fa-solid fa-arrow-right"></i></a>
@@ -485,18 +496,17 @@
     <div class="folder-card">
       <div>
         <div class="folder-header">
-          <i class="fa-solid fa-eye folder-icon" style="color:#8b5cf6;"></i>
-          <div>
-            <div class="folder-title">09. Eyewitness Perspectives & Site Alignment</div>
-          </div>
+          <i class="fa-solid fa-eye folder-icon" style="color:#a78bfa;"></i>
+          <div><div class="folder-title">09. Site Imagery &amp; Post-Crash Dashcam Still</div></div>
         </div>
         <div class="folder-desc">
-          Driver perspective photos confirming unobstructed sightlines, signal heads alignment, resting positions after collision, and through-traffic lighting separation.
+          Two client-annotated Google Street View screenshots (Apr 2025 imagery): the eastbound left-turn signal heads at the SH 121 North ramp terminal (a four-section flashing-yellow-arrow head beside three-section through heads) and the northbound frontage-road approach; plus a GPS-stamped dashcam still from inside the client&rsquo;s vehicle at rest (05:09:46) and a GPS route-map screenshot. Daylight imagery; it does not show the indications displayed at the time of the crash.
         </div>
         <div class="file-pills">
-          <a href="09_Eyewitness_Perspectives_And_Site_Photos/ViewPointBeforeCrash.png" target="_blank" class="pill"><i class="fa-solid fa-image"></i> Driver Viewpoint Before Impact</a>
-          <a href="09_Eyewitness_Perspectives_And_Site_Photos/ActualPositionAfterCrash.png" target="_blank" class="pill"><i class="fa-solid fa-image"></i> Resting Position After Crash</a>
-          <a href="09_Eyewitness_Perspectives_And_Site_Photos/2026-09-03_07-01-49 -through lights not connected to turning light.png" target="_blank" class="pill"><i class="fa-solid fa-image"></i> Signal Lighting Photos</a>
+          <a href="09_Eyewitness_Perspectives_And_Site_Photos/2026-09-03_07-01-49 -through lights not connected to turning light.png" target="_blank" class="pill"><i class="fa-solid fa-traffic-light"></i> Left-Turn Signal Heads (Street View)</a>
+          <a href="09_Eyewitness_Perspectives_And_Site_Photos/ViewPointBeforeCrash.png" target="_blank" class="pill"><i class="fa-solid fa-image"></i> NB Frontage Approach (Street View)</a>
+          <a href="09_Eyewitness_Perspectives_And_Site_Photos/ActualPositionAfterCrash.png" target="_blank" class="pill"><i class="fa-solid fa-video"></i> Dashcam Still 05:09:46</a>
+          <a href="09_Eyewitness_Perspectives_And_Site_Photos/IMG_9365.jpeg" target="_blank" class="pill"><i class="fa-solid fa-map"></i> GPS Route Map Screenshot</a>
         </div>
       </div>
       <a href="09_Eyewitness_Perspectives_And_Site_Photos/index.html" class="folder-link">Browse Folder <i class="fa-solid fa-arrow-right"></i></a>
@@ -506,18 +516,16 @@
     <div class="folder-card">
       <div>
         <div class="folder-header">
-          <i class="fa-solid fa-envelope-open-text folder-icon" style="color:#f97316;"></i>
-          <div>
-            <div class="folder-title">10. Spoliation Demands & Subpoena Targets</div>
-          </div>
+          <i class="fa-solid fa-envelope-open-text folder-icon" style="color:#fb923c;"></i>
+          <div><div class="folder-title">10. Preservation Demand Letters (Drafts)</div></div>
         </div>
         <div class="folder-desc">
-          Ready-to-sign formal legal preservation letters for TxDOT Fort Worth (Michael Peters), City of Grapevine, Shell Gas Station, Hampton Inn, and Aloft Hotel.
+          Three unsigned draft preservation and production demands dated 09/03/2026 (letterhead and attorney details still needed): TxDOT Fort Worth District ITS camera video (ATTN Michael Peters); TxDOT and City of Grapevine NEMA TS2 controller logs and timing plans; and one combined commercial-video demand to Shell, Hampton Inn &amp; Suites DFW North and Aloft Dallas DFW Airport Grapevine.
         </div>
         <div class="file-pills">
-          <a href="10_Spoliation_Demands_And_Subpoena_Targets/01_Spoliation_Letter_TxDOT_Fort_Worth_ITS_Cameras.md" target="_blank" class="pill"><i class="fa-solid fa-file-lines"></i> TxDOT ITS Spoliation Letter</a>
-          <a href="10_Spoliation_Demands_And_Subpoena_Targets/02_Spoliation_Letter_TxDOT_And_Grapevine_NEMA_TS2_Logs.md" target="_blank" class="pill"><i class="fa-solid fa-file-lines"></i> NEMA TS2 Subpoena Demand</a>
-          <a href="10_Spoliation_Demands_And_Subpoena_Targets/03_Commercial_Surveillance_Spoliation_Demands_Shell_Hampton_Aloft.md" target="_blank" class="pill"><i class="fa-solid fa-file-lines"></i> Commercial Video Letters</a>
+          <a href="10_Spoliation_Demands_And_Subpoena_Targets/01_Spoliation_Letter_TxDOT_Fort_Worth_ITS_Cameras.md" target="_blank" class="pill"><i class="fa-solid fa-file-lines"></i> TxDOT ITS Video Demand</a>
+          <a href="10_Spoliation_Demands_And_Subpoena_Targets/02_Spoliation_Letter_TxDOT_And_Grapevine_NEMA_TS2_Logs.md" target="_blank" class="pill"><i class="fa-solid fa-file-lines"></i> NEMA TS2 Logs Demand</a>
+          <a href="10_Spoliation_Demands_And_Subpoena_Targets/03_Commercial_Surveillance_Spoliation_Demands_Shell_Hampton_Aloft.md" target="_blank" class="pill"><i class="fa-solid fa-file-lines"></i> Commercial Video Demand</a>
         </div>
       </div>
       <a href="10_Spoliation_Demands_And_Subpoena_Targets/index.html" class="folder-link">Browse Folder <i class="fa-solid fa-arrow-right"></i></a>
@@ -527,18 +535,21 @@
     <div class="folder-card">
       <div>
         <div class="folder-header">
-          <i class="fa-solid fa-box-archive folder-icon" style="color:#64748b;"></i>
-          <div>
-            <div class="folder-title">11. Technical Reference & Dashcam Archive</div>
-          </div>
+          <i class="fa-solid fa-book folder-icon" style="color:#94a3b8;"></i>
+          <div><div class="folder-title">11. Technical References &amp; Draft Requests</div></div>
         </div>
         <div class="folder-desc">
-          Technical references, Apple Crash Detection automated 911 audio transcript execution records, Vantrue N5 manual, and raw cluster forensics archive.
+          Third-party references (Apple&rsquo;s 2022 Crash Detection overview &mdash; a product brief, not a call record; Bosch CDR v18.0 vehicle list and v25.1 product sheet; Vantrue N5 user manual V5.1), a draft Public Information Act request for signal and street-lighting records, a read-only Vecto-Pilot SQL query script, a generated evidence-recovery plan (09/01/2026) and a SHA-256 manifest.
         </div>
         <div class="file-pills">
-          <a href="11_Technical_Reference_And_Dashcam_Archive/apple_crash_exec.pdf" target="_blank" class="pill"><i class="fa-solid fa-file-pdf"></i> Apple Crash Detection Log</a>
-          <a href="11_Technical_Reference_And_Dashcam_Archive/cdrlist.pdf" target="_blank" class="pill"><i class="fa-solid fa-file-pdf"></i> Bosch CDR Vehicle List</a>
-          <a href="11_Technical_Reference_And_Dashcam_Archive/n5manual.pdf" target="_blank" class="pill"><i class="fa-solid fa-file-pdf"></i> Vantrue N5 Hardware Manual</a>
+          <a href="11_Technical_Reference_And_Dashcam_Archive/TPIA-addon-signal-lighting-complaints-2026-09-01.txt" target="_blank" class="pill"><i class="fa-solid fa-file-lines"></i> TPIA Request Draft (signals &amp; lighting)</a>
+          <a href="11_Technical_Reference_And_Dashcam_Archive/OTHER-ROUTES-PLAN.md" target="_blank" class="pill"><i class="fa-solid fa-file-lines"></i> Evidence-Recovery Plan</a>
+          <a href="11_Technical_Reference_And_Dashcam_Archive/apple_crash_exec.pdf" target="_blank" class="pill"><i class="fa-solid fa-file-pdf"></i> Apple Crash Detection Overview (2022)</a>
+          <a href="11_Technical_Reference_And_Dashcam_Archive/cdrlist.pdf" target="_blank" class="pill"><i class="fa-solid fa-file-pdf"></i> Bosch CDR v18.0 Vehicle List</a>
+          <a href="11_Technical_Reference_And_Dashcam_Archive/cdr251.pdf" target="_blank" class="pill"><i class="fa-solid fa-file-pdf"></i> Bosch CDR v25.1 Info</a>
+          <a href="11_Technical_Reference_And_Dashcam_Archive/n5manual.pdf" target="_blank" class="pill"><i class="fa-solid fa-file-pdf"></i> Vantrue N5 User Manual</a>
+          <a href="11_Technical_Reference_And_Dashcam_Archive/vectopilot-0828-readonly-queries.sql" target="_blank" class="pill"><i class="fa-solid fa-database"></i> Vecto-Pilot SQL Queries</a>
+          <a href="11_Technical_Reference_And_Dashcam_Archive/SHA256SUMS.txt" target="_blank" class="pill"><i class="fa-solid fa-fingerprint"></i> SHA-256 Manifest</a>
         </div>
       </div>
       <a href="11_Technical_Reference_And_Dashcam_Archive/index.html" class="folder-link">Browse Folder <i class="fa-solid fa-arrow-right"></i></a>
@@ -547,7 +558,7 @@
   </div>
 
   <footer>
-    Melody Dawn Dashora Evidence Portfolio · Certified August 28, 2026 Collision Repository · Confidential Attorney-Client Privileged Work Product
+    Melody Dawn Dashora &middot; Evidence portfolio for the August 28, 2026 collision &middot; Confidential; prepared for counsel and claims review &middot; Links and descriptions verified against the files on 09/04/2026
   </footer>
 
 </div>

@@ -20,7 +20,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   
   <!-- Application CSS -->
-  <link rel="stylesheet" href="styles.css?v=20260902_compact" />
+  <link rel="stylesheet" href="styles.css?v=20260904d" />
 </head>
 <body>
 
@@ -53,6 +53,7 @@
         <select id="mapLayerSelect" class="preset-select">
           <option value="satellite_hybrid" selected>Satellite + Street Labels (Clean)</option>
           <option value="satellite_pure">High-Res Satellite (Aerial Only)</option>
+          <option value="google_satellite">Google Satellite (Map Tiles API)</option>
           <option value="dark">Forensic Dark Matter</option>
           <option value="voyager">CartoDB Voyager (Streets)</option>
           <option value="streets">OpenStreetMap</option>
@@ -72,6 +73,11 @@
       <!-- Stop at Impact Toggle -->
       <button id="btnAutoStopImpact" class="btn-header active" title="Automatically freeze playback at the exact collision point (05:00:15 AM)">
         <i class="fa-solid fa-hand"></i> Stop at Impact
+      </button>
+
+      <!-- Night Lighting Toggle (collision was at 05:00 in darkness; CR-4: DARK, LIGHTED) -->
+      <button id="btnNightMode" class="btn-header active" title="Dim the daytime satellite imagery to 05:00 AM lighting conditions">
+        <i class="fa-solid fa-moon"></i> Night
       </button>
 
       <!-- Evidence Report Modal Trigger -->
@@ -118,6 +124,7 @@
           <select id="mobileMapLayerSelect" class="drawer-select">
             <option value="satellite_hybrid" selected>Satellite + Street Labels (Clean)</option>
             <option value="satellite_pure">High-Res Satellite (Aerial Only)</option>
+            <option value="google_satellite">Google Satellite (Map Tiles API)</option>
             <option value="dark">Forensic Dark Matter</option>
             <option value="voyager">CartoDB Voyager (Streets)</option>
             <option value="streets">OpenStreetMap</option>
@@ -133,6 +140,9 @@
           </button>
           <button id="btnMobileAutoStopImpact" class="drawer-toggle-btn active">
             <i class="fa-solid fa-hand"></i> Stop at Impact
+          </button>
+          <button id="btnMobileNightMode" class="drawer-toggle-btn active">
+            <i class="fa-solid fa-moon"></i> Night
           </button>
         </div>
 
@@ -244,7 +254,7 @@
         <div id="hudOncomingCard" class="data-card full-width" style="background:rgba(248,250,252,0.06); border:1px solid rgba(255,255,255,0.12);">
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <span class="data-label" style="color:#cbd5e1;"><i class="fa-solid fa-car" style="color:#f8fafc;"></i> Unit 2: 2014 White BMW 550</span>
-            <span id="hudSedanBadge" class="badge-tag" style="background:rgba(245,158,11,0.2); border-color:rgba(245,158,11,0.4); color:#fbbf24;">Late Yellow Attempt</span>
+            <span id="hudSedanBadge" class="badge-tag" style="background:rgba(245,158,11,0.2); border-color:rgba(245,158,11,0.4); color:#fbbf24;">Approaching (client&rsquo;s account)</span>
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
             <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; color:#fff;">42.0 MPH</span>
@@ -255,8 +265,14 @@
         <!-- TxDOT Diamond Signal Phasing & Full Interchange Progression Visualizer -->
         <div id="hudSignalCard" class="data-card full-width signal-phasing-card">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-            <span class="data-label" style="color:#38bdf8;"><i class="fa-solid fa-traffic-light"></i> TxDOT Diamond Controller Standards</span>
-            <span id="signalPhaseBadge" class="badge-tag signal-badge green">Green Progression</span>
+            <span class="data-label" style="color:#38bdf8;"><i class="fa-solid fa-traffic-light"></i> Signal Phasing (FYA head)</span>
+            <span style="display:flex; gap:6px; align-items:center;">
+              <select id="signalScenarioSelect" class="scenario-select" title="Which account the lights render. Neither is controller data.">
+                <option value="client" selected>Client&rsquo;s account</option>
+                <option value="cr4">CR-4 narrative (FYA)</option>
+              </select>
+              <span id="signalPhaseBadge" class="badge-tag signal-badge green">Green Progression</span>
+            </span>
           </div>
           
           <!-- Interchange Stations Grid -->
@@ -285,6 +301,7 @@
               <div class="signal-housing">
                 <div id="u1RedLight" class="signal-lens red off"></div>
                 <div id="u1YellowLight" class="signal-lens yellow off"><i class="fa-solid fa-arrow-left"></i></div>
+                <div id="u1FlashLight" class="signal-lens yellow flashing off" title="Flashing yellow arrow section"><i class="fa-solid fa-arrow-left"></i></div>
                 <div id="u1GreenLight" class="signal-lens green on"><i class="fa-solid fa-arrow-left"></i></div>
               </div>
               <div id="u1SignalLabel" class="signal-state-label green">GREEN ARROW</div>
@@ -329,7 +346,7 @@
         <div class="impact-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
         <div>
           <div class="impact-text-title">Two-Vehicle Collision Impact (T-Bone)</div>
-          <div id="impactAlertDesc" class="impact-text-desc">Unit 2 (2014 BMW 550i V8 - Uninsured) front end (12 O'Clock) contacted Unit 1 (2025 VW Atlas SE FWD - Black) right middle/rear flank (3 O'Clock) as Atlas completed northward turn &bull; Atlas front 100% undamaged</div>
+          <div id="impactAlertDesc" class="impact-text-desc">Unit 2 (2014 BMW 550, white; CR-4: no proof of financial responsibility) front end (12 o&rsquo;clock) struck Unit 1 (2025 VW Atlas SE FWD, black) on the right side as the Atlas turned north. CR-4 damage entries: Unit 1 3 o&rsquo;clock right front quarter, angular impact; Unit 2 12 o&rsquo;clock front end, distributed impact. Fault is disputed: the CR-4 narrative says Unit 1 turned on a flashing yellow arrow; the client says a steady green arrow.</div>
         </div>
       </div>
     </div>
@@ -406,7 +423,7 @@
       </div>
 
       <p class="modal-desc" style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
-        Extracted directly from dashcam hardware flash logs (<code>gps-20260828.csv</code>). 13,285 high-resolution telemetry points capturing position, velocity, and altitude with zero data gaps.
+        Extracted from the Vantrue N5 dashcam GPS log (<code>gps-20260828_13285_Records.csv</code>, binder 03): 13,285 one-second records of position, speed (logged in knots) and altitude. The 02:56&ndash;05:03 segment covering the stop, approach and impact is gap-free; the full log has a 74-minute parked gap (01:21&ndash;02:35) and a 78-second post-impact gap (05:03:43&ndash;05:05:01). Heading is derived from successive positions, not logged.
       </p>
 
       <!-- EXHIBIT A: DASHCAM PHOTO -->
@@ -416,7 +433,7 @@
           <span style="font-size: 11px; background: rgba(56, 189, 248, 0.15); color: #38bdf8; padding: 2px 8px; border-radius: 4px; font-family: var(--font-mono);">N 32.955082  W 97.038185  0MPH</span>
         </div>
         <div class="exhibit-body" style="display: flex; gap: 16px; align-items: center;">
-          <img src="dashcam_post_accident.png" alt="Post Collision Dashcam Telemetry" class="exhibit-img" style="width: 260px; max-width: 100%; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 4px 12px rgba(0,0,0,0.6);" />
+          <img src="03_Sub_Second_GPS_Telematics_And_Kinematics/Exhibit_A_Dashcam_Post_Accident_Photo_050543.png" alt="Post Collision Dashcam Telemetry" class="exhibit-img" style="width: 260px; max-width: 100%; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 4px 12px rgba(0,0,0,0.6);" />
           <div class="exhibit-text" style="font-size: 12px; color: var(--text-secondary); line-height: 1.5;">
             <p style="margin: 0 0 6px 0;"><strong style="color: #f8fafc;">Hardware Stamped Telemetry:</strong> VANTRUE N5 hardware recorded timestamp <code>08/28/2026 05:05:43</code> at coordinates <code>N 32.955082, W 97.038185</code> at <code>0 MPH</code>.</p>
             <p style="margin: 0 0 6px 0;"><strong style="color: #f8fafc;">Orientation & Visual Confirmation:</strong> Vehicle windshield is pointed directly North towards the <strong>SH 121 North</strong> and <strong>Bass Pro Dr</strong> overhead traffic signs, confirming the SUV was pushed westward during the collision while maintaining its northward orientation towards the 121 entrance ramp.</p>
@@ -447,9 +464,12 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   
   <!-- GPS Telemetry Dataset -->
+  <!-- Server-provided feature flags (Google tiles availability). Harmless 404 when opened offline from disk. -->
+  <script src="config.js"></script>
+
   <script src="gps_full_data.js"></script>
   
   <!-- Telemetry & Animation Engine -->
-  <script src="telemetry_engine.js?v=20260902_compact"></script>
+  <script src="telemetry_engine.js?v=20260904d"></script>
 </body>
 </html>

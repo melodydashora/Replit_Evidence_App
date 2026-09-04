@@ -1,7 +1,13 @@
 run = "node server.js"
 entrypoint = "server.js"
+onBoot = "bash /home/runner/workspace/scripts/claude-persist.sh"
 hidden = [".git", "node_modules"]
 modules = ["nodejs-24"]
+
+[env]
+# Claude Code state (memory, settings, sign-in, transcripts) lives on the persistent workspace volume;
+# /home/runner itself is rebuilt on every container restart. See scripts/claude-persist.sh.
+CLAUDE_CONFIG_DIR = "/home/runner/workspace/.config/claude"
 
 [nix]
 channel = "stable-23_11"

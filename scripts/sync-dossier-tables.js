@@ -70,17 +70,18 @@ function table(headers, rows) {
 function claimsBlock() {
   const claims = (loadWindowGlobal(DATA_FILES.claims, 'CLAIMS_STATUS') || []).filter(c => c && typeof c === 'object');
   if (!claims.length) return '_No claims recorded in `claims_status.js` yet._';
+  // One paragraph per claim (the "summary" field), the same text the portal card shows; the full detail and the
+  // assessment live in each claim's memo document, which the last column names.
   const rows = claims.map(c => [
     cell(c.carrier || ''),
     c.claim_number ? `**${cell(c.claim_number)}**` : '_not yet assigned_',
-    cell([c.type, c.coverage].filter(Boolean).join(' — ')),
     cell(c.status || 'Open'),
-    cell([c.adjuster, c.phone, c.email].filter(Boolean).join(' · ')),
-    cell([c.incident_date ? 'Incident date on claim ' + fmtDate(c.incident_date) : '', c.opened ? 'Opened ' + fmtDate(c.opened) : '', c.last_update ? 'Checked ' + fmtDate(c.last_update) : ''].filter(Boolean).join('; ')),
-    cell([c.next_step, c.notes].filter(Boolean).join(' '))
+    cell([c.incident_date ? 'Incident date on claim ' + fmtDate(c.incident_date) : '', c.last_update ? 'Checked ' + fmtDate(c.last_update) : ''].filter(Boolean).join('; ')),
+    cell([c.summary, c.next_step ? 'Next: ' + c.next_step : ''].filter(Boolean).join(' ')),
+    cell(c.memo ? path.basename(c.memo) : '')
   ]);
-  return table(['Carrier', 'Claim number', 'Type / coverage', 'Status', 'Adjuster & contact', 'Dates', 'Next step / notes'], rows) +
-    `\n\n_Source: \`claims_status.js\` (${claims.length} claim${claims.length === 1 ? '' : 's'}); the same list drives the portal's claims cards._`;
+  return table(['Carrier', 'Claim number', 'Status', 'Dates', 'Summary and next step', 'Memo'], rows) +
+    `\n\n_Source: \`claims_status.js\` (${claims.length} claim${claims.length === 1 ? '' : 's'}); the same list drives the portal's claims cards. Each memo is filed in the claim's binder and holds the coverage detail, the documents and the assessment._`;
 }
 
 function propertyBlock() {

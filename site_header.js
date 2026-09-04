@@ -50,6 +50,8 @@
     '#siteHeader .sh-section{margin-left:auto;font-size:12px;color:#cbd5e1;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:40%;}',
     '#siteHeader .sh-badge{font-size:10.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#fca5a5;border:1px solid rgba(239,68,68,0.6);',
     'background:rgba(239,68,68,0.12);padding:3px 8px;border-radius:5px;white-space:nowrap;}',
+    '#siteHeader .sh-role{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#7dd3fc;border:1px solid rgba(56,189,248,0.45);',
+    'background:rgba(56,189,248,0.1);padding:3px 8px;border-radius:5px;white-space:nowrap;}',
     '#siteHeader .sh-logout{color:#94a3b8;text-decoration:none;font-size:12px;white-space:nowrap;padding:6px 8px;border-radius:6px;}',
     '#siteHeader .sh-logout:hover{color:#f8fafc;background:rgba(255,255,255,0.06);}',
     '@media (max-width:760px){#siteHeader .sh-case-meta,#siteHeader .sh-badge{display:none;}#siteHeader .sh-inner{padding:8px 12px;gap:10px;}',
@@ -64,6 +66,7 @@
     'html[data-theme="light"] #siteHeader .sh-case-title{color:#12213d;}html[data-theme="light"] #siteHeader .sh-case-meta{color:#5c6779;}',
     'html[data-theme="light"] #siteHeader .sh-section{color:#2b3548;}',
     'html[data-theme="light"] #siteHeader .sh-badge{color:#b42318;border-color:#f0a8a2;background:#fdecea;}',
+    'html[data-theme="light"] #siteHeader .sh-role{color:#1a5db3;border-color:#bcd0ee;background:#eef4fc;}',
     'html[data-theme="light"] #siteHeader .sh-logout{color:#5c6779;}html[data-theme="light"] #siteHeader .sh-logout:hover{color:#12213d;background:#f0f3f8;}'
   ].join('');
 
@@ -103,8 +106,9 @@
   inner.appendChild(badge);
 
   // "Sign out" only makes sense when the site is served behind the access-token gate.
+  var logout = null;
   if (!isFile) {
-    var logout = document.createElement('a');
+    logout = document.createElement('a');
     logout.className = 'sh-logout';
     logout.href = '/logout';
     logout.textContent = 'Sign out';
@@ -122,12 +126,35 @@
     document.body.style.paddingTop = (base + header.offsetHeight) + 'px';
   }
 
+  // Which token signed this browser in. The server answers /api/me; the label is informational only
+  // (every permission is decided server-side) and the header stays exactly as it is when the route is
+  // missing, unauthorised or the page was opened from disk.
+  var ROLE_LABELS = { owner: 'Owner', counsel: 'Counsel', adjuster: 'Adjuster', tnc: 'Casualty group' };
+
+  function showRole() {
+    if (isFile || typeof fetch !== 'function') return;
+    fetch('/api/me', { credentials: 'same-origin', headers: { Accept: 'application/json' } })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (j) {
+        var label = j && ROLE_LABELS[j.role];
+        if (!label) return;
+        var tag = document.createElement('span');
+        tag.className = 'sh-role';
+        tag.textContent = label;
+        tag.title = 'Signed in with the ' + j.role + ' token';
+        inner.insertBefore(tag, logout || null);
+        reserveSpace();
+      })
+      .catch(function () {});
+  }
+
   function install() {
     document.head.appendChild(style);
     document.body.insertBefore(header, document.body.firstChild);
     reserveSpace();
     window.addEventListener('resize', reserveSpace);
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(reserveSpace);
+    showRole();
   }
 
   if (document.body) install();

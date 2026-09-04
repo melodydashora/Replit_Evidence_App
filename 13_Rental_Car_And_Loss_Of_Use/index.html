@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Exhibit 12: Personal Property Lost in the Vehicle | Evidence Repository</title>
+<title>Exhibit 13: Rental Car (Hertz) and Loss of Use | Evidence Repository</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -169,16 +169,16 @@
   </div>
 
   <div class="header-card">
-    <div class="eyebrow">Binder 12 &middot; Contents claim</div>
-    <h1><i class="fa-solid fa-box-open" style="color:var(--accent);"></i> Personal Property Lost in the Vehicle</h1>
-    <p class="folder-desc">Itemized list, maintained by the client, of personal property that was inside the 2025 Volkswagen Atlas (TX WHB6147) when it was struck on 08/28/2026 and was lost, damaged or destroyed. Quantities, purchase prices and claimed values are the client&rsquo;s statements; receipts, order confirmations and photographs are linked in the Proof column where they are on file in <code>Receipts_And_Photos/</code>. Contents claims are separate from the vehicle total-loss valuation (Dossier &sect;12).</p>
+    <div class="eyebrow">Binder 13 &middot; Rental car and loss of use</div>
+    <h1><i class="fa-solid fa-car" style="color:var(--accent);"></i> Rental Car (Hertz) and Loss of Use</h1>
+    <p class="folder-desc">The client rented a vehicle from Hertz after the 08/28/2026 collision. Progressive&rsquo;s personal policy carries Rental Reimbursement of $60 per day for up to 30 days ($1,800), per the coverage-at-time-of-incident screen for claim 26-854858569 in Binder 08. The ledger below is maintained by the client and its totals are computed from the rows she enters; amounts are her statements until the Hertz documents are on file. The daily screenshots and the final receipt are attached below and are copied into <code>Hertz_Receipts_And_Screenshots/</code> by <code>npm run pull:uploads</code>.</p>
   </div>
 
-  <!-- Itemized list: rendered from property_loss_items.js by case_components.js -->
-  <div data-component="property-loss"></div>
+  <!-- Rental ledger: charges, payments and the policy limit, rendered by case_components.js -->
+  <div data-component="hertz"></div>
 
-  <!-- Uploaded receipts and photos -->
-  <div data-component="attachments" data-key="property-loss" data-title="Receipts and photos uploaded on the site" data-desc="Order confirmations and receipts from Amazon, Best Buy and other sellers for items installed in or left in the vehicle, and photographs of the items. List each item itself in property_loss_items.js."></div>
+  <!-- Uploaded rental receipts and screenshots -->
+  <div data-component="attachments" data-key="hertz" data-title="Daily screenshots and the final receipt" data-desc="Screenshots of the Hertz rental record taken while the rental is running, and the final Hertz receipt when it ends. Uploaded by the client; give each file the date of the screenshot or receipt so it lines up with the ledger row above."></div>
 
   <div class="section-title"><i class="fa-solid fa-folder-open" style="color:var(--accent);"></i> Files in this binder</div>
   <table>
@@ -193,24 +193,24 @@
     <tbody>
       <tr class="file-row">
         <td class="file-name-cell">
-          <i class="fa-solid fa-folder file-icon"></i>
-          <a href="Receipts_And_Photos" class="file-link">Receipts_And_Photos</a>
+          <i class="fa-solid fa-file-lines file-icon"></i>
+          <a href="README.txt" target="_blank" class="file-link">README.txt</a>
         </td>
-        <td class="file-type-cell">Folder</td>
-        <td class="file-size-cell">Receipts, order confirmations and photos of the items</td>
+        <td class="file-type-cell">TXT</td>
+        <td class="file-size-cell">What is in this binder and how uploaded files are pulled into it</td>
         <td class="file-action-cell">
-          <a href="Receipts_And_Photos" class="btn-open">Open Folder <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="README.txt" target="_blank" class="btn-open">View File <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
         </td>
       </tr>
       <tr class="file-row">
         <td class="file-name-cell">
-          <i class="fa-solid fa-file-code file-icon"></i>
-          <a href="property_loss_items.js" target="_blank" class="file-link">property_loss_items.js</a>
+          <i class="fa-solid fa-folder file-icon"></i>
+          <a href="Hertz_Receipts_And_Screenshots/" class="file-link">Hertz_Receipts_And_Screenshots</a>
         </td>
-        <td class="file-type-cell">JS</td>
-        <td class="file-size-cell">Source list behind the table above (one entry per item)</td>
+        <td class="file-type-cell">Folder</td>
+        <td class="file-size-cell">Receipts and screenshots of the rental, including the files uploaded on the site</td>
         <td class="file-action-cell">
-          <a href="property_loss_items.js" target="_blank" class="btn-open">View File <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="Hertz_Receipts_And_Screenshots/" class="btn-open">Open Folder <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
         </td>
       </tr>
     </tbody>
@@ -218,7 +218,6 @@
 
   <footer>Dashora v. Savala-Fitzpatrick &middot; TxDOT Crash ID 21609720.1 &middot; Confidential; prepared for counsel and claims review</footer>
 </div>
-<script src="property_loss_items.js"></script>
 <script src="../case_components.js"></script>
 </body>
 </html>

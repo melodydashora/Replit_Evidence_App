@@ -10,7 +10,13 @@ Addressee used in both drafts: CT Corporation System, 1999 Bryan St., Suite 900,
 registered agent for both entities. Confirm on the Texas Secretary of State (SOSDirect) before service; the PC session
 that drafted the letters labelled the address a "verified fallback", not a registry lookup.
 
-Still to add: the written request under Tex. Ins. Code sec. 1954.154 (precise log-on/log-off times for the 12 hours
-either side of 08/28/2026 05:00:15 CDT, plus a description of coverage, exclusions and limits) to Rasier/Uber AND to
-United Financial Casualty Company; proof of sending for each letter; the Uber "Download Your Data" export when it arrives.
-Name new files by date and subject, e.g. 2026-09-05_Letter_A_Preservation_Uber_Rasier_SENT.pdf. Keep sent versions unaltered.
+Corrected drafts (2026-09-04) are in Drafts/: Letter_A_Preservation_Demand_Uber_Technologies_And_Rasier_DRAFT.md,
+Letter_B_Ins_Code_1954-154_Request_Rasier_Uber_UFCC_DRAFT.md (the written request for the precise log-on/log-off times
+for the 12 hours either side of 08/28/2026 05:00:15 CDT and a description of coverage, exclusions and limits, to
+Rasier, Uber and United Financial Casualty Company), Verification_Notes_2026-09-04.md and a README on how to send them.
+They are headed DRAFT FOR COUNSEL REVIEW and carry bracketed placeholders (date, signature block, telephone) and a
+verification status for every address. Do not mail the two PC drafts above.
+
+Still to add: proof of sending for each letter; the Uber "Download Your Data" export when it arrives (request it
+before 2026-09-27). Name new files by date and subject, e.g. 2026-09-05_Letter_A_Preservation_Uber_Rasier_SENT.pdf.
+Keep sent versions unaltered.

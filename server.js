@@ -2,17 +2,74 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { Pool, types: pgTypes } = require('pg');
 
 const PORT = process.env.PORT || 3000;
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY || '';
 
 // --- Access token gate -------------------------------------------------------------------------------
-// Every request needs a valid access token. Set CASE_ACCESS_TOKEN (Replit: Tools -> Secrets) to one
-// token, or to several separated by commas if different people should get different tokens later.
-// CASE_PASSCODE is accepted as an alias for older deployments. Without a token the site fails closed.
-// A token must not contain a comma or leading/trailing spaces (commas separate tokens); use a random hex string.
-const ACCESS_TOKENS = String(process.env.CASE_ACCESS_TOKEN || process.env.CASE_PASSCODE || '')
-  .split(',').map(s => s.trim()).filter(Boolean);
+// Every request needs a valid access token, and the token decides which role the holder has. Set the
+// secrets below (Replit: Tools -> Secrets); each may hold one token or several separated by commas, so
+// the same role can be handed different tokens to different people and one can be revoked on its own.
+// CASE_ACCESS_TOKEN (alias CASE_PASSCODE) is the original single token and keeps working as the owner.
+// Without any token the site fails closed. A token must not contain a comma or leading/trailing spaces
+// (commas separate tokens); use a random hex string.
+const TOKENS = []; // [{ token, role }]
+function registerTokens(raw, role) {
+  String(raw || '').split(',').map(s => s.trim()).filter(Boolean).forEach(token => TOKENS.push({ token, role }));
+}
+registerTokens(process.env.CASE_TOKEN_OWNER, 'owner');
+registerTokens(process.env.CASE_TOKEN_COUNSEL, 'counsel');
+registerTokens(process.env.CASE_TOKEN_ADJUSTER, 'adjuster');
+registerTokens(process.env.CASE_TOKEN_TNC, 'tnc');
+registerTokens(process.env.CASE_ACCESS_TOKEN || process.env.CASE_PASSCODE, 'owner');
+
+// The runtime-editable panels the front end can address. Anything else is a 400 from the API.
+const COMPONENTS = ['hertz', 'property-loss', 'injury-photos', 'claims', 'carrier-messages', 'counsel-documents', 'signed-documents'];
+
+// Single source of truth for what each role may do; the front end only ever asks /api/me.
+// Everyone who holds a token sees everything. Restrictions ("checkboxes") only ever limit DOWNLOADS,
+// and only for the adjuster and the casualty-group (TNC) tokens. Uploads are the owner's, except that
+// counsel-documents takes counsel's uploads only and signed-documents takes both.
+const ROLE_PERMISSIONS = {
+  owner: {
+    upload: COMPONENTS.filter(k => k !== 'counsel-documents'),
+    delete: COMPONENTS.filter(k => k !== 'counsel-documents'),
+    editLedger: true,
+    manageRestrictions: true,
+    viewAccessLog: true,
+    restrictedDownloads: false
+  },
+  counsel: {
+    upload: ['counsel-documents', 'signed-documents'],
+    delete: ['counsel-documents', 'signed-documents'],
+    editLedger: true,
+    manageRestrictions: true,
+    viewAccessLog: true,
+    restrictedDownloads: false
+  },
+  adjuster: {
+    upload: [],
+    delete: [],
+    editLedger: false,
+    manageRestrictions: false,
+    viewAccessLog: false,
+    restrictedDownloads: true
+  },
+  tnc: {
+    upload: [],
+    delete: [],
+    editLedger: false,
+    manageRestrictions: false,
+    viewAccessLog: false,
+    restrictedDownloads: true
+  }
+};
+
+function permissionsFor(role) {
+  return ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS.tnc;
+}
+
 const COOKIE_NAME = 'case_access';
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 const FAIL_WINDOW_MS = 15 * 60 * 1000;
@@ -52,7 +109,9 @@ const ROUTE_ALIASES = {
 };
 // Shortcuts to pages inside a binder redirect to the folder, so the page's relative script and link paths resolve.
 const ROUTE_REDIRECTS = {
-  '/property-loss': '/12_Personal_Property_Loss_And_Vehicle_Contents/'
+  '/property-loss': '/12_Personal_Property_Loss_And_Vehicle_Contents/',
+  '/rental-car': '/13_Rental_Car_And_Loss_Of_Use/',
+  '/correspondence': '/14_Correspondence_Counsel_And_Signed_Documents/'
 };
 
 // Never serve dotfiles (.git, .env, .replit, ...) or node_modules.
@@ -106,14 +165,23 @@ function safeEqual(a, b) {
   return crypto.timingSafeEqual(ha, hb);
 }
 
-function tokenIsValid(candidate) {
-  if (!candidate) return false;
-  return ACCESS_TOKENS.some(t => safeEqual(t, candidate));
+// Both return the role string of the matching token, or null. They compare against every configured token
+// (no early exit) so the answer takes the same time whichever token was given.
+function roleForToken(candidate) {
+  if (!candidate) return null;
+  let role = null;
+  for (const entry of TOKENS) if (safeEqual(entry.token, candidate) && role === null) role = entry.role;
+  return role;
 }
 
-function cookieIsValid(value) {
-  if (!value) return false;
-  return ACCESS_TOKENS.some(t => safeEqual(cookieValueFor(t, 0), value) || safeEqual(cookieValueFor(t, -1), value));
+function roleForCookie(value) {
+  if (!value) return null;
+  let role = null;
+  for (const entry of TOKENS) {
+    const hit = safeEqual(cookieValueFor(entry.token, 0), value) || safeEqual(cookieValueFor(entry.token, -1), value);
+    if (hit && role === null) role = entry.role;
+  }
+  return role;
 }
 
 function parseCookies(req) {
@@ -364,9 +432,10 @@ function readBody(req, limit, cb) {
   req.on('error', err => { if (!done) { done = true; cb(err); } });
 }
 
-// Returns true when the request may proceed; otherwise it has already been answered.
+// Returns the caller's role string when the request may proceed; otherwise false, and the request has
+// already been answered.
 function enforceAccess(req, res, url) {
-  if (!ACCESS_TOKENS.length) {
+  if (!TOKENS.length) {
     sendHtml(res, 503, notConfiguredPage());
     return false;
   }
@@ -391,12 +460,15 @@ function enforceAccess(req, res, url) {
       const form = new URLSearchParams(body);
       const token = (form.get('token') || '').trim();
       const next = safeNext(form.get('next'));
-      if (tokenIsValid(token)) {
+      const role = roleForToken(token);
+      if (role) {
         failures.delete(ip);
+        logAccess(req, role, '/access', 303, 'sign-in');
         res.writeHead(303, { Location: next, 'Set-Cookie': setCookieHeader(req, token), 'Cache-Control': 'no-store' });
         return res.end();
       }
       recordFailure(ip);
+      logAccess(req, 'unknown', '/access', 401, 'sign-in refused');
       sendHtml(res, 401, gatePage(next, 'That access token is not recognised.'));
     });
     return false;
@@ -409,33 +481,41 @@ function enforceAccess(req, res, url) {
       sendHtml(res, 429, gatePage('/', 'Too many incorrect attempts. Wait 15 minutes and try again.'));
       return false;
     }
-    if (tokenIsValid(queryToken.trim())) {
+    const linkRole = roleForToken(queryToken.trim());
+    if (linkRole) {
       failures.delete(ip);
       url.searchParams.delete('token');
       const clean = safeNext(url.pathname + (url.searchParams.toString() ? '?' + url.searchParams.toString() : ''));
+      logAccess(req, linkRole, url.pathname, 303, 'sign-in');
       res.writeHead(303, { Location: clean, 'Set-Cookie': setCookieHeader(req, queryToken.trim()), 'Cache-Control': 'no-store' });
       res.end();
       return false;
     }
     recordFailure(ip);
+    logAccess(req, 'unknown', url.pathname, 401, 'sign-in refused');
     sendHtml(res, 401, gatePage(url.pathname, 'The access token in that link is not recognised.'));
     return false;
   }
 
   // Cookie set by a previous sign-in.
-  if (cookieIsValid(parseCookies(req)[COOKIE_NAME])) return true;
+  const cookieRole = roleForCookie(parseCookies(req)[COOKIE_NAME]);
+  if (cookieRole) return cookieRole;
 
   // Authorization header (curl, scripted checks, older Basic-auth bookmarks).
   const authHeader = req.headers.authorization;
   if (authHeader) {
     const [scheme, value = ''] = authHeader.split(' ');
-    if (/^bearer$/i.test(scheme) && tokenIsValid(value.trim())) return true;
+    if (/^bearer$/i.test(scheme)) {
+      const bearerRole = roleForToken(value.trim());
+      if (bearerRole) return bearerRole;
+    }
     if (/^basic$/i.test(scheme)) {
       const decoded = Buffer.from(value, 'base64').toString();
       const idx = decoded.indexOf(':');
       const login = idx >= 0 ? decoded.slice(0, idx) : decoded;
       const password = idx >= 0 ? decoded.slice(idx + 1) : '';
-      if (tokenIsValid(password) || tokenIsValid(login)) return true;
+      const basicRole = roleForToken(password) || roleForToken(login);
+      if (basicRole) return basicRole;
     }
   }
 
@@ -448,6 +528,643 @@ function enforceAccess(req, res, url) {
     res.end('An access token is required for this evidence portfolio.');
   }
   return false;
+}
+
+// --- Upload store (PostgreSQL) -----------------------------------------------------------------------
+// The deployment target is Replit Autoscale, whose filesystem is ephemeral, so everything that can be
+// edited at runtime (uploaded files, the rental ledger, download restrictions, the access log) lives in
+// Postgres instead of on disk. `npm run pull:uploads` copies the files back into the binder folders.
+// When DATABASE_URL is unset or unreachable the static site is unaffected: only /api/ answers 503.
+const DATABASE_URL = process.env.DATABASE_URL || '';
+const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
+const MAX_JSON_BYTES = 64 * 1024;
+
+// A DATE column is a calendar day, not an instant: keep it as the stored 'YYYY-MM-DD' text so no
+// timezone can shift a receipt date by a day on the way to the browser.
+pgTypes.setTypeParser(1082, v => v);
+
+let pool = null;
+let schemaReady = null;
+let dbFailureLogged = false;
+
+function noteDbFailure(err) {
+  if (dbFailureLogged) return; // once, not once per request
+  dbFailureLogged = true;
+  console.error('Upload store unavailable; /api/ routes answer 503 while the rest of the site keeps serving. Reason:', err && err.message);
+}
+
+function getPool() {
+  if (!DATABASE_URL) return null;
+  if (!pool) {
+    // sslmode in the connection string decides TLS (Replit sets it), so there is nothing to configure here.
+    pool = new Pool({ connectionString: DATABASE_URL, max: 5, idleTimeoutMillis: 30000, connectionTimeoutMillis: 8000 });
+    pool.on('error', err => noteDbFailure(err)); // an idle client dropping must never take the process down
+  }
+  return pool;
+}
+
+const SCHEMA_SQL = `
+CREATE TABLE IF NOT EXISTS files (
+  id            serial PRIMARY KEY,
+  component     text NOT NULL,
+  name          text NOT NULL,
+  mime          text NOT NULL,
+  size          integer NOT NULL,
+  sha256        text NOT NULL,
+  data          bytea NOT NULL,
+  caption       text NOT NULL DEFAULT '',
+  doc_date      date,
+  uploaded_by   text NOT NULL,
+  uploaded_at   timestamptz NOT NULL DEFAULT now(),
+  restricted    boolean NOT NULL DEFAULT false,
+  deleted_at    timestamptz,
+  deleted_by    text
+);
+CREATE INDEX IF NOT EXISTS files_component_idx ON files (component, deleted_at);
+CREATE TABLE IF NOT EXISTS ledger_entries (
+  id              serial PRIMARY KEY,
+  component       text NOT NULL,
+  entry_date      date,
+  description     text NOT NULL DEFAULT '',
+  amount          numeric(12,2) NOT NULL DEFAULT 0,
+  paid_by_client  numeric(12,2) NOT NULL DEFAULT 0,
+  paid_by_insurer numeric(12,2) NOT NULL DEFAULT 0,
+  note            text NOT NULL DEFAULT '',
+  created_at      timestamptz NOT NULL DEFAULT now(),
+  updated_at      timestamptz NOT NULL DEFAULT now(),
+  updated_by      text NOT NULL,
+  deleted_at      timestamptz,
+  deleted_by      text
+);
+CREATE TABLE IF NOT EXISTS restrictions (
+  scope       text PRIMARY KEY,
+  restricted  boolean NOT NULL DEFAULT false,
+  updated_by  text NOT NULL,
+  updated_at  timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS access_log (
+  id      bigserial PRIMARY KEY,
+  ts      timestamptz NOT NULL DEFAULT now(),
+  role    text NOT NULL,
+  ip      text NOT NULL DEFAULT '',
+  method  text NOT NULL,
+  path    text NOT NULL,
+  status  integer NOT NULL,
+  note    text NOT NULL DEFAULT ''
+);
+`;
+
+// Every statement goes through here, so the schema is created lazily on the first API call and a
+// connection problem always surfaces as one kind of error the API router turns into a 503.
+async function dbQuery(text, params) {
+  const p = getPool();
+  if (!p) {
+    const err = new Error('DATABASE_URL is not set');
+    err.dbUnavailable = true;
+    throw err;
+  }
+  if (!schemaReady) {
+    schemaReady = p.query(SCHEMA_SQL).catch(err => { schemaReady = null; throw err; }); // retry on the next call
+  }
+  await schemaReady;
+  return p.query(text, params);
+}
+
+// Only a real connection problem should read as "not configured". A bug in a route handler must stay a 500
+// and keep being logged, or the one-shot noteDbFailure() would hide it.
+function isConnectionError(err) {
+  if (!err) return false;
+  if (err.dbUnavailable) return true;
+  if (/^E[A-Z]+$/.test(String(err.code || ''))) return true; // ECONNREFUSED, ENOTFOUND, ETIMEDOUT, ECONNRESET
+  return /timeout exceeded when trying to connect|Connection terminated|client password must be|no pg_hba/i.test(String(err.message || ''));
+}
+
+// Fire and forget: the access log must never delay or fail a response.
+function logAccess(req, role, pathValue, status, note) {
+  if (!DATABASE_URL) return;
+  dbQuery(
+    'INSERT INTO access_log (role, ip, method, path, status, note) VALUES ($1, $2, $3, $4, $5, $6)',
+    [String(role || 'unknown'), clientIp(req), String(req.method || ''), String(pathValue || '').slice(0, 500), Number(status) || 0, String(note || '')]
+  ).catch(err => noteDbFailure(err));
+}
+
+// Documents handed out from disk are logged; the pages, scripts, styles and map tiles that make up the
+// site are not, or the log would be unreadable.
+const LOGGED_DOCUMENT_EXTS = ['.pdf', '.png', '.jpg', '.jpeg', '.webp', '.gif', '.heic', '.mp4', '.mov', '.csv', '.md', '.txt', '.docx'];
+
+// --- API ---------------------------------------------------------------------------------------------
+const UPLOAD_MIME_TYPES = [
+  'image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/heic', 'image/heif',
+  'application/pdf', 'text/plain', 'text/markdown', 'text/csv', 'message/rfc822',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'video/mp4', 'video/quicktime', 'application/octet-stream'
+];
+// Types a browser should not try to display inline.
+const ATTACHMENT_MIME_TYPES = [
+  'application/octet-stream',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'video/mp4', 'video/quicktime'
+];
+
+function apiError(res, status, message) {
+  sendJson(res, status, { error: message });
+}
+
+function readRawBody(req, limit, cb) {
+  const chunks = [];
+  let total = 0;
+  let done = false;
+  req.on('data', chunk => {
+    if (done) return;
+    total += chunk.length;
+    if (total > limit) {
+      done = true;
+      const err = new Error('body too large');
+      err.tooLarge = true;
+      return cb(err);
+    }
+    chunks.push(chunk);
+  });
+  req.on('end', () => { if (!done) { done = true; cb(null, Buffer.concat(chunks, total)); } });
+  req.on('error', err => { if (!done) { done = true; cb(err); } });
+}
+
+// Answer, then stop reading: draining a rejected 25 MB upload would cost exactly what the cap saves.
+function refuseTooLarge(req, res, message) {
+  if (!res.headersSent) {
+    res.writeHead(413, { 'Content-Type': 'application/json; charset=UTF-8', 'Cache-Control': 'no-store', 'Connection': 'close' });
+    res.end(JSON.stringify({ error: message }));
+  }
+  req.pause();
+  res.on('finish', () => { if (req.socket && !req.socket.destroyed) req.socket.destroy(); });
+}
+
+// Resolve with the parsed body, or with null when the request has already been answered.
+function readJsonBody(req, res) {
+  return new Promise(resolve => {
+    readRawBody(req, MAX_JSON_BYTES, (err, buf) => {
+      if (err && err.tooLarge) { refuseTooLarge(req, res, 'That request body is too large.'); return resolve(null); }
+      if (err) { apiError(res, 400, 'The request body could not be read.'); return resolve(null); }
+      if (!buf || !buf.length) return resolve({});
+      let parsed;
+      try {
+        parsed = JSON.parse(buf.toString('utf8'));
+      } catch (e) {
+        apiError(res, 400, 'The request body is not valid JSON.');
+        return resolve(null);
+      }
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        apiError(res, 400, 'The request body must be a JSON object.');
+        return resolve(null);
+      }
+      resolve(parsed);
+    });
+  });
+}
+
+function readUploadBody(req, res) {
+  return new Promise(resolve => {
+    readRawBody(req, MAX_UPLOAD_BYTES, (err, buf) => {
+      if (err && err.tooLarge) { refuseTooLarge(req, res, 'That file is larger than the 25 MB limit.'); return resolve(null); }
+      if (err) { apiError(res, 400, 'The upload could not be read.'); return resolve(null); }
+      resolve(buf);
+    });
+  });
+}
+
+// The stored name is only ever used as a label and as a download filename, never as a path.
+function sanitiseFileName(raw) {
+  let name = String(raw || '');
+  try { name = decodeURIComponent(name); } catch (e) { /* not percent-encoded: take it as given */ }
+  name = name.replace(/[\\/]/g, '_').replace(/[\u0000-\u001f\u007f]/g, '').trim();
+  if (name === '.' || name === '..') name = '';
+  return name.slice(0, 200);
+}
+
+function decodeHeaderText(raw) {
+  let value = String(raw || '');
+  try { value = decodeURIComponent(value); } catch (e) { /* not percent-encoded: take it as given */ }
+  return value.replace(/[\u0000-\u001f\u007f]/g, ' ').trim();
+}
+
+function isDateString(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(value))) return false;
+  const d = new Date(String(value) + 'T00:00:00Z');
+  return !isNaN(d.getTime()) && d.toISOString().slice(0, 10) === String(value);
+}
+
+// An empty <input type="date"> posts '', which means "no date", not "a bad date".
+function dateOrNull(value) {
+  if (value === null || value === undefined || value === '') return null;
+  return String(value);
+}
+
+function round2(n) {
+  return Math.round(n * 100) / 100;
+}
+
+// RFC 5987 wants these percent-encoded too; encodeURIComponent leaves them alone and an apostrophe in a
+// file name would otherwise break the filename* parameter.
+function rfc5987(name) {
+  return encodeURIComponent(name).replace(/['()*!]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase());
+}
+
+function fileRecord(row, componentRestricted, perms) {
+  const restricted = Boolean(row.restricted);
+  return {
+    id: row.id,
+    name: row.name,
+    mime: row.mime,
+    size: row.size,
+    sha256: row.sha256,
+    caption: row.caption,
+    doc_date: row.doc_date || null,
+    uploaded_by: row.uploaded_by,
+    uploaded_at: row.uploaded_at,
+    restricted: restricted,
+    // Restrictions only ever limit downloads, and only for the adjuster and casualty-group tokens.
+    downloadable: !(perms.restrictedDownloads && (componentRestricted || restricted))
+  };
+}
+
+function ledgerRecord(row) {
+  return {
+    id: row.id,
+    entry_date: row.entry_date || null,
+    description: row.description,
+    amount: Number(row.amount),
+    paid_by_client: Number(row.paid_by_client),
+    paid_by_insurer: Number(row.paid_by_insurer),
+    note: row.note,
+    updated_at: row.updated_at,
+    updated_by: row.updated_by
+  };
+}
+
+const FILE_COLUMNS = 'id, component, name, mime, size, sha256, caption, doc_date, uploaded_by, uploaded_at, restricted';
+
+async function componentIsRestricted(component) {
+  const r = await dbQuery('SELECT restricted FROM restrictions WHERE scope = $1', ['component:' + component]);
+  return r.rows.length ? Boolean(r.rows[0].restricted) : false;
+}
+
+function handleApi(req, res, url, reqUrl, role) {
+  apiRoute(req, res, url, reqUrl, role).catch(err => {
+    if (isConnectionError(err)) {
+      noteDbFailure(err);
+      if (!res.headersSent) apiError(res, 503, 'database not configured');
+      return;
+    }
+    console.error('API error:', err && err.message);
+    if (!res.headersSent) apiError(res, 500, 'The request could not be completed.');
+  });
+}
+
+async function apiRoute(req, res, url, reqUrl, role) {
+  const perms = permissionsFor(role);
+  const method = req.method || 'GET';
+  const isMutation = method === 'POST' || method === 'PATCH' || method === 'PUT' || method === 'DELETE';
+
+  // A mutation must come from the portal's own scripts: a plain cross-site form cannot set this header,
+  // and the cookie is SameSite=Lax, so together they keep another site from acting as the signed-in user.
+  if (isMutation) {
+    if (String(req.headers['x-requested-with'] || '') !== 'CaseComponents') {
+      return apiError(res, 403, 'This request must come from the case portal.');
+    }
+    const origin = req.headers.origin;
+    if (origin) {
+      let originHost = '';
+      try { originHost = new URL(origin).host; } catch (e) { originHost = ''; }
+      if (!originHost || originHost !== String(req.headers.host || '')) {
+        return apiError(res, 403, 'This request came from another site.');
+      }
+    }
+  }
+
+  // --- /api/me: the only thing the front end asks about permissions.
+  if (reqUrl === '/api/me' && method === 'GET') {
+    return sendJson(res, 200, {
+      role: role,
+      permissions: {
+        upload: perms.upload.slice(),
+        delete: perms.delete.slice(),
+        editLedger: perms.editLedger,
+        manageRestrictions: perms.manageRestrictions,
+        viewAccessLog: perms.viewAccessLog,
+        restrictedDownloads: perms.restrictedDownloads
+      },
+      components: COMPONENTS.slice()
+    });
+  }
+
+  // --- /api/files
+  if (reqUrl === '/api/files' && method === 'GET') {
+    const component = String(url.searchParams.get('component') || '');
+    if (COMPONENTS.indexOf(component) === -1) return apiError(res, 400, 'That is not a known component.');
+    const restricted = await componentIsRestricted(component);
+    const r = await dbQuery(
+      `SELECT ${FILE_COLUMNS} FROM files WHERE component = $1 AND deleted_at IS NULL
+       ORDER BY doc_date DESC NULLS LAST, uploaded_at DESC`,
+      [component]
+    );
+    return sendJson(res, 200, {
+      component: component,
+      restricted: restricted,
+      files: r.rows.map(row => fileRecord(row, restricted, perms))
+    });
+  }
+
+  if (reqUrl === '/api/files' && method === 'POST') {
+    const component = String(url.searchParams.get('component') || '');
+    if (COMPONENTS.indexOf(component) === -1) return apiError(res, 400, 'That is not a known component.');
+    if (perms.upload.indexOf(component) === -1) return apiError(res, 403, 'Your access token cannot upload to this panel.');
+
+    const mime = String(req.headers['content-type'] || '').split(';')[0].trim().toLowerCase();
+    if (UPLOAD_MIME_TYPES.indexOf(mime) === -1) return apiError(res, 415, 'That file type is not accepted here.');
+
+    const name = sanitiseFileName(req.headers['x-file-name']);
+    if (!name) return apiError(res, 400, 'The upload needs an X-File-Name header with the file name.');
+
+    const caption = decodeHeaderText(req.headers['x-caption']).slice(0, 2000);
+    const docDateRaw = decodeHeaderText(req.headers['x-doc-date']);
+    if (docDateRaw && !isDateString(docDateRaw)) return apiError(res, 400, 'The document date must be written YYYY-MM-DD.');
+
+    const body = await readUploadBody(req, res);
+    if (body === null) return; // already answered (413 or unreadable)
+    if (!body.length) return apiError(res, 400, 'The uploaded file is empty.');
+
+    const sha256 = crypto.createHash('sha256').update(body).digest('hex');
+    const inserted = await dbQuery(
+      `INSERT INTO files (component, name, mime, size, sha256, data, caption, doc_date, uploaded_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING ${FILE_COLUMNS}`,
+      [component, name, mime, body.length, sha256, body, caption, docDateRaw || null, role]
+    );
+    const restricted = await componentIsRestricted(component);
+    logAccess(req, role, reqUrl, 201, 'upload');
+    return sendJson(res, 201, fileRecord(inserted.rows[0], restricted, perms));
+  }
+
+  const fileMatch = reqUrl.match(/^\/api\/files\/(\d{1,12})$/);
+  if (fileMatch) {
+    const id = Number(fileMatch[1]);
+
+    // HEAD answers with the same headers and no body (Node drops it), so a browser or a link checker can
+    // ask about a file without pulling the bytes.
+    if (method === 'GET' || method === 'HEAD') {
+      const r = await dbQuery('SELECT id, component, name, mime, size, restricted, data FROM files WHERE id = $1 AND deleted_at IS NULL', [id]);
+      if (!r.rows.length) {
+        logAccess(req, role, reqUrl, 404, 'download');
+        return apiError(res, 404, 'That file is not in the store.');
+      }
+      const row = r.rows[0];
+      const compRestricted = await componentIsRestricted(row.component);
+      if (perms.restrictedDownloads && (compRestricted || row.restricted)) {
+        logAccess(req, role, reqUrl, 403, 'download refused (restricted)');
+        return apiError(res, 403, 'This file is restricted for your access token.');
+      }
+      const asAttachment = url.searchParams.get('download') === '1' || ATTACHMENT_MIME_TYPES.indexOf(row.mime) !== -1;
+      res.writeHead(200, {
+        'Content-Type': row.mime,
+        'Content-Length': row.data.length,
+        'Content-Disposition': (asAttachment ? 'attachment' : 'inline') + "; filename*=UTF-8''" + rfc5987(row.name),
+        'X-Content-Type-Options': 'nosniff',
+        'Cache-Control': 'private, no-store'
+      });
+      logAccess(req, role, reqUrl, 200, 'download');
+      return res.end(row.data);
+    }
+
+    if (method === 'PATCH') {
+      const body = await readJsonBody(req, res);
+      if (body === null) return;
+      const existing = await dbQuery('SELECT id, component, uploaded_by FROM files WHERE id = $1 AND deleted_at IS NULL', [id]);
+      if (!existing.rows.length) return apiError(res, 404, 'That file is not in the store.');
+      const row = existing.rows[0];
+
+      const wantsMetadata = Object.prototype.hasOwnProperty.call(body, 'caption') || Object.prototype.hasOwnProperty.call(body, 'doc_date');
+      const wantsRestriction = Object.prototype.hasOwnProperty.call(body, 'restricted');
+      if (!wantsMetadata && !wantsRestriction) return apiError(res, 400, 'Nothing to change in that request.');
+      // The owner captions anything; counsel captions what counsel uploaded.
+      if (wantsMetadata && !(role === 'owner' || (role === 'counsel' && row.uploaded_by === 'counsel'))) {
+        return apiError(res, 403, 'Your access token cannot edit this file.');
+      }
+      if (wantsRestriction && !perms.manageRestrictions) {
+        return apiError(res, 403, 'Your access token cannot change restrictions.');
+      }
+
+      const sets = [];
+      const values = [];
+      if (Object.prototype.hasOwnProperty.call(body, 'caption')) {
+        if (typeof body.caption !== 'string') return apiError(res, 400, 'The caption must be text.');
+        values.push(body.caption.slice(0, 2000));
+        sets.push('caption = $' + values.length);
+      }
+      if (Object.prototype.hasOwnProperty.call(body, 'doc_date')) {
+        const docDate = dateOrNull(body.doc_date);
+        if (docDate !== null && !isDateString(docDate)) return apiError(res, 400, 'The document date must be written YYYY-MM-DD, or null.');
+        values.push(docDate);
+        sets.push('doc_date = $' + values.length);
+      }
+      if (wantsRestriction) {
+        if (typeof body.restricted !== 'boolean') return apiError(res, 400, 'The restricted flag must be true or false.');
+        values.push(body.restricted);
+        sets.push('restricted = $' + values.length);
+      }
+      values.push(id);
+      const updated = await dbQuery(`UPDATE files SET ${sets.join(', ')} WHERE id = $${values.length} RETURNING ${FILE_COLUMNS}`, values);
+      if (wantsRestriction) {
+        // Keep /api/restrictions in step with the file row it reports on.
+        await dbQuery(
+          `INSERT INTO restrictions (scope, restricted, updated_by, updated_at) VALUES ($1, $2, $3, now())
+           ON CONFLICT (scope) DO UPDATE SET restricted = EXCLUDED.restricted, updated_by = EXCLUDED.updated_by, updated_at = now()`,
+          ['file:' + id, body.restricted, role]
+        );
+      }
+      const restricted = await componentIsRestricted(row.component);
+      logAccess(req, role, reqUrl, 200, 'patch');
+      return sendJson(res, 200, fileRecord(updated.rows[0], restricted, perms));
+    }
+
+    if (method === 'DELETE') {
+      const existing = await dbQuery('SELECT id, component FROM files WHERE id = $1 AND deleted_at IS NULL', [id]);
+      if (!existing.rows.length) return apiError(res, 404, 'That file is not in the store.');
+      if (perms.delete.indexOf(existing.rows[0].component) === -1) {
+        return apiError(res, 403, 'Your access token cannot remove files from this panel.');
+      }
+      // Nothing is hard-deleted: the row keeps its bytes and gains a deletion stamp.
+      await dbQuery('UPDATE files SET deleted_at = now(), deleted_by = $1 WHERE id = $2', [role, id]);
+      logAccess(req, role, reqUrl, 200, 'delete');
+      return sendJson(res, 200, { ok: true });
+    }
+
+    return apiError(res, 400, 'That method is not supported on this file.');
+  }
+
+  // --- /api/ledger
+  if (reqUrl === '/api/ledger' && method === 'GET') {
+    const component = String(url.searchParams.get('component') || '');
+    if (COMPONENTS.indexOf(component) === -1) return apiError(res, 400, 'That is not a known component.');
+    const r = await dbQuery(
+      `SELECT id, entry_date, description, amount, paid_by_client, paid_by_insurer, note, updated_at, updated_by
+       FROM ledger_entries WHERE component = $1 AND deleted_at IS NULL
+       ORDER BY entry_date ASC NULLS LAST, id ASC`,
+      [component]
+    );
+    const entries = r.rows.map(ledgerRecord);
+    const totals = entries.reduce((acc, e) => {
+      acc.amount += e.amount;
+      acc.paid_by_client += e.paid_by_client;
+      acc.paid_by_insurer += e.paid_by_insurer;
+      return acc;
+    }, { amount: 0, paid_by_client: 0, paid_by_insurer: 0 });
+    totals.amount = round2(totals.amount);
+    totals.paid_by_client = round2(totals.paid_by_client);
+    totals.paid_by_insurer = round2(totals.paid_by_insurer);
+    totals.remaining = round2(totals.amount - totals.paid_by_client - totals.paid_by_insurer);
+    return sendJson(res, 200, { component: component, entries: entries, totals: totals });
+  }
+
+  if (reqUrl === '/api/ledger' && method === 'POST') {
+    const component = String(url.searchParams.get('component') || '');
+    if (COMPONENTS.indexOf(component) === -1) return apiError(res, 400, 'That is not a known component.');
+    if (!perms.editLedger) return apiError(res, 403, 'Your access token cannot edit the ledger.');
+    const body = await readJsonBody(req, res);
+    if (body === null) return;
+
+    const entryDate = dateOrNull(body.entry_date);
+    if (entryDate !== null && !isDateString(entryDate)) {
+      return apiError(res, 400, 'The entry date must be written YYYY-MM-DD.');
+    }
+    const amounts = {};
+    for (const field of ['amount', 'paid_by_client', 'paid_by_insurer']) {
+      const raw = body[field] === undefined || body[field] === null || body[field] === '' ? 0 : Number(body[field]);
+      if (!isFinite(raw) || raw < 0) return apiError(res, 400, 'Amounts must be numbers of zero or more.');
+      amounts[field] = round2(raw);
+    }
+    const inserted = await dbQuery(
+      `INSERT INTO ledger_entries (component, entry_date, description, amount, paid_by_client, paid_by_insurer, note, updated_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING id, entry_date, description, amount, paid_by_client, paid_by_insurer, note, updated_at, updated_by`,
+      [
+        component,
+        entryDate,
+        String(body.description === undefined || body.description === null ? '' : body.description).slice(0, 2000),
+        amounts.amount, amounts.paid_by_client, amounts.paid_by_insurer,
+        String(body.note === undefined || body.note === null ? '' : body.note).slice(0, 2000),
+        role
+      ]
+    );
+    logAccess(req, role, reqUrl, 201, 'ledger add');
+    return sendJson(res, 201, ledgerRecord(inserted.rows[0]));
+  }
+
+  const ledgerMatch = reqUrl.match(/^\/api\/ledger\/(\d{1,12})$/);
+  if (ledgerMatch) {
+    const id = Number(ledgerMatch[1]);
+    if (!perms.editLedger) return apiError(res, 403, 'Your access token cannot edit the ledger.');
+
+    if (method === 'PATCH') {
+      const body = await readJsonBody(req, res);
+      if (body === null) return;
+      const existing = await dbQuery('SELECT id FROM ledger_entries WHERE id = $1 AND deleted_at IS NULL', [id]);
+      if (!existing.rows.length) return apiError(res, 404, 'That ledger entry does not exist.');
+
+      const sets = [];
+      const values = [];
+      if (Object.prototype.hasOwnProperty.call(body, 'entry_date')) {
+        const entryDate = dateOrNull(body.entry_date);
+        if (entryDate !== null && !isDateString(entryDate)) return apiError(res, 400, 'The entry date must be written YYYY-MM-DD, or null.');
+        values.push(entryDate);
+        sets.push('entry_date = $' + values.length);
+      }
+      for (const field of ['description', 'note']) {
+        if (Object.prototype.hasOwnProperty.call(body, field)) {
+          if (typeof body[field] !== 'string') return apiError(res, 400, 'The description and note must be text.');
+          values.push(body[field].slice(0, 2000));
+          sets.push(field + ' = $' + values.length);
+        }
+      }
+      for (const field of ['amount', 'paid_by_client', 'paid_by_insurer']) {
+        if (Object.prototype.hasOwnProperty.call(body, field)) {
+          const raw = Number(body[field]);
+          if (!isFinite(raw) || raw < 0) return apiError(res, 400, 'Amounts must be numbers of zero or more.');
+          values.push(round2(raw));
+          sets.push(field + ' = $' + values.length);
+        }
+      }
+      if (!sets.length) return apiError(res, 400, 'Nothing to change in that request.');
+      values.push(role);
+      sets.push('updated_by = $' + values.length);
+      sets.push('updated_at = now()');
+      values.push(id);
+      const updated = await dbQuery(
+        `UPDATE ledger_entries SET ${sets.join(', ')} WHERE id = $${values.length}
+         RETURNING id, entry_date, description, amount, paid_by_client, paid_by_insurer, note, updated_at, updated_by`,
+        values
+      );
+      logAccess(req, role, reqUrl, 200, 'ledger edit');
+      return sendJson(res, 200, ledgerRecord(updated.rows[0]));
+    }
+
+    if (method === 'DELETE') {
+      const existing = await dbQuery('SELECT id FROM ledger_entries WHERE id = $1 AND deleted_at IS NULL', [id]);
+      if (!existing.rows.length) return apiError(res, 404, 'That ledger entry does not exist.');
+      await dbQuery('UPDATE ledger_entries SET deleted_at = now(), deleted_by = $1, updated_at = now(), updated_by = $1 WHERE id = $2', [role, id]);
+      logAccess(req, role, reqUrl, 200, 'ledger delete');
+      return sendJson(res, 200, { ok: true });
+    }
+
+    return apiError(res, 400, 'That method is not supported on this ledger entry.');
+  }
+
+  // --- /api/restrictions
+  if (reqUrl === '/api/restrictions' && method === 'GET') {
+    const r = await dbQuery('SELECT scope, restricted FROM restrictions', []);
+    const out = {};
+    r.rows.forEach(row => { out[row.scope] = Boolean(row.restricted); });
+    return sendJson(res, 200, out);
+  }
+
+  if (reqUrl === '/api/restrictions' && method === 'PUT') {
+    if (!perms.manageRestrictions) return apiError(res, 403, 'Your access token cannot change restrictions.');
+    const body = await readJsonBody(req, res);
+    if (body === null) return;
+    const scope = String(body.scope || '');
+    if (typeof body.restricted !== 'boolean') return apiError(res, 400, 'The restricted flag must be true or false.');
+
+    const compScope = scope.match(/^component:(.+)$/);
+    const fileScope = scope.match(/^file:(\d{1,12})$/);
+    if (compScope && COMPONENTS.indexOf(compScope[1]) === -1) return apiError(res, 400, 'That is not a known component.');
+    if (!compScope && !fileScope) return apiError(res, 400, 'A scope must be "component:<key>" or "file:<id>".');
+    if (fileScope) {
+      const existing = await dbQuery('SELECT id FROM files WHERE id = $1 AND deleted_at IS NULL', [Number(fileScope[1])]);
+      if (!existing.rows.length) return apiError(res, 404, 'That file is not in the store.');
+    }
+
+    await dbQuery(
+      `INSERT INTO restrictions (scope, restricted, updated_by, updated_at) VALUES ($1, $2, $3, now())
+       ON CONFLICT (scope) DO UPDATE SET restricted = EXCLUDED.restricted, updated_by = EXCLUDED.updated_by, updated_at = now()`,
+      [scope, body.restricted, role]
+    );
+    // files.restricted is what the listings read, so a file scope writes both places.
+    if (fileScope) {
+      await dbQuery('UPDATE files SET restricted = $1 WHERE id = $2', [body.restricted, Number(fileScope[1])]);
+    }
+    logAccess(req, role, reqUrl, 200, 'restriction');
+    return sendJson(res, 200, { scope: scope, restricted: body.restricted });
+  }
+
+  // --- /api/access-log
+  if (reqUrl === '/api/access-log' && method === 'GET') {
+    if (!perms.viewAccessLog) return apiError(res, 403, 'Your access token cannot read the access log.');
+    const asked = parseInt(url.searchParams.get('limit'), 10);
+    const limit = Math.min(Math.max(isFinite(asked) && asked > 0 ? asked : 200, 1), 1000);
+    const r = await dbQuery('SELECT id, ts, role, ip, method, path, status, note FROM access_log ORDER BY id DESC LIMIT $1', [limit]);
+    // id is a bigserial, which the driver hands back as a string; the front end wants a number.
+    return sendJson(res, 200, { entries: r.rows.map(row => Object.assign({}, row, { id: Number(row.id) })) });
+  }
+
+  return apiError(res, 404, 'That API route does not exist.');
 }
 
 const server = http.createServer((req, res) => {
@@ -468,7 +1185,9 @@ function handleRequest(req, res) {
     return sendHtml(res, 400, notFoundPage(req.url));
   }
 
-  if (!enforceAccess(req, res, url)) return;
+  const role = enforceAccess(req, res, url);
+  if (!role) return;
+  req.caseRole = role;
 
   let reqUrl;
   try {
@@ -491,6 +1210,11 @@ function handleRequest(req, res) {
   const tileMatch = reqUrl.match(/^\/gtiles\/(\d{1,2})\/(\d{1,8})\/(\d{1,8})$/);
   if (tileMatch) {
     return proxyGoogleTile(res, tileMatch[1], tileMatch[2], tileMatch[3]);
+  }
+
+  // Uploads, the rental ledger, restrictions and the access log live in Postgres, not on disk.
+  if (reqUrl === '/api' || reqUrl.startsWith('/api/')) {
+    return handleApi(req, res, url, reqUrl, role);
   }
 
   if (ROUTE_REDIRECTS[reqUrl]) {
@@ -537,6 +1261,9 @@ function handleRequest(req, res) {
     return sendHtml(res, 200, renderDirectory(filePath, reqUrl));
   }
 
+  if (LOGGED_DOCUMENT_EXTS.indexOf(path.extname(filePath).toLowerCase()) !== -1) {
+    logAccess(req, role, reqUrl, 200, 'document');
+  }
   return streamFile(res, filePath, stat);
 }
 
@@ -562,12 +1289,16 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`Evidence Portal (landing): http://localhost:${PORT}/`);
   console.log(`Reconstruction: http://localhost:${PORT}/reconstruction`);
   console.log(`Official Dossier PDF: http://localhost:${PORT}/dossier`);
-  if (ACCESS_TOKENS.length) {
-    console.log(`Access token gate: ON (${ACCESS_TOKENS.length} token${ACCESS_TOKENS.length === 1 ? '' : 's'} configured)`);
+  if (TOKENS.length) {
+    const byRole = {};
+    TOKENS.forEach(t => { byRole[t.role] = (byRole[t.role] || 0) + 1; });
+    const summary = Object.keys(byRole).map(r => `${r}:${byRole[r]}`).join(' ');
+    console.log(`Access token gate: ON (${TOKENS.length} token${TOKENS.length === 1 ? '' : 's'} configured - ${summary})`);
   } else {
     console.log(`!! Access token gate: NOT CONFIGURED - every request is refused with a 503 page.`);
     console.log(`!! Set CASE_ACCESS_TOKEN (Replit: Tools -> Secrets) and restart.`);
   }
+  console.log(`Upload store (Postgres): ${DATABASE_URL ? 'configured' : 'off (set DATABASE_URL; /api/ routes answer 503)'}`);
   console.log(`Google satellite tiles: ${GOOGLE_MAPS_API_KEY ? 'ON' : 'off (set GOOGLE_MAPS_API_KEY to enable)'}`);
   console.log(`================================================================`);
 });

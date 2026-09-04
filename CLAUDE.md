@@ -145,6 +145,32 @@ Key facts about the engine that are not obvious from reading any single function
   dossier (§3.1 claims, §9.4 injury photos, §12.4 property) from the same data files; `npm run build:dossier-pdf` runs it
   first. Never hand-edit inside the markers.
 
+### Roles, uploads, the rental ledger and the access log (added 2026-09-04)
+- **Tokens carry roles.** `CASE_TOKEN_OWNER`, `CASE_TOKEN_COUNSEL`, `CASE_TOKEN_ADJUSTER`, `CASE_TOKEN_TNC` (each may be a comma
+  list); the legacy `CASE_ACCESS_TOKEN` / `CASE_PASSCODE` is an owner token. `enforceAccess()` returns the role and
+  `handleRequest` keeps it on `req.caseRole`; `ROLE_PERMISSIONS` in server.js is the only permission table and the front end
+  learns its rights from `GET /api/me`. Owner's rule: every token sees everything; restrictions ("checkboxes") only stop the
+  adjuster and TNC roles from DOWNLOADING a panel's files or one file; they are all off by default. Uploads: owner on every
+  panel except counsel-documents; counsel on counsel-documents and signed-documents. Nothing is hard-deleted (`deleted_at`).
+- **Storage is Postgres**, because the Autoscale deployment's filesystem is ephemeral: tables `files` (bytea, 25 MB cap),
+  `ledger_entries` (the Hertz ledger), `restrictions` and `access_log`, created lazily from `DATABASE_URL`. Listings never
+  select the bytea column. Without a database every `/api/` route answers 503 JSON and the panels show one quiet notice.
+  The workspace and the deployment may have different databases; `npm run pull:uploads` (`scripts/pull-uploads.js`, honours
+  `PROD_DATABASE_URL`) copies uploaded files into the binder folders and writes `13_.../rental_ledger.json` and
+  `uploads_manifest.json` so the git record stays complete. Component keys: `hertz`, `property-loss`, `injury-photos`,
+  `claims`, `carrier-messages`, `counsel-documents`, `signed-documents`.
+- **API** (JSON, `Cache-Control: no-store`; mutations need `X-Requested-With: CaseComponents` and a same-host Origin):
+  `/api/me`, `/api/files?component=K` (GET list, POST raw body with `X-File-Name`/`X-Caption` URI-encoded and `X-Doc-Date`),
+  `/api/files/:id` (GET stream, PATCH caption/date/restricted, DELETE soft), `/api/ledger?component=hertz` (GET/POST),
+  `/api/ledger/:id` (PATCH/DELETE), `/api/restrictions` (GET, PUT {scope, restricted} with scope `component:K` or `file:ID`),
+  `/api/access-log`. Documents served from disk are logged too (role, ip, path, status).
+- **Components** in `case_components.js`: `attachments` (`data-key`), `hertz`, `hertz-summary`, `access-log`; the claims card
+  shows the claim's one-paragraph `summary` and links its `memo` document (full detail lives in the memo, filed in the
+  claim's binder). Binder 13 (`/rental-car`) is the Hertz ledger and its receipts; binder 14 (`/correspondence`) holds carrier
+  messages, counsel documents, signed documents and the access log; both are light-theme pages like binder 12.
+- The rental limit shown on the ledger (`HERTZ_CAP`: $60/day, 30 days, $1,800) comes from the Progressive coverage-at-time-of-
+  incident screen for claim 26-854858569 (binder 08). Do not change it without a document.
+
 ### Evidence portal and binders
 `00_START_HERE_EVIDENCE_PORTAL.html` is the landing page linking into folders `00_` through `12_`; it also renders
 the claims cards and the binder 12 summary, so it loads the three scripts above at the end of `<body>`.
@@ -178,3 +204,12 @@ PDF is generated from the Markdown by `npm run build:dossier-pdf`; edit the `.md
 autoscale deployment. `replit.nix` additionally provides Python 3.11, git, curl and jq for terminal
 work; `pdftotext`/`pdfinfo` are also on the PATH. Git history shows Replit Agent commits config changes
 as its own author; content commits are the owner's.
+
+**Claude Code on this Repl (2026-09-04).** `/home/runner` is rebuilt on every container restart; only the workspace survives.
+The program files live in `workspace/.local/share/claude/versions/`; the launcher on PATH is the wrapper
+`workspace/.config/npm/node_global/bin/claude` (do not replace it with a symlink through `~/.local/bin`, which is wiped);
+state (memory, settings, sign-in, transcripts, workflow journals) lives in `workspace/.config/claude`, selected by
+`CLAUDE_CONFIG_DIR` from `.replit` `[env]` and `workspace/.config/bashrc`, with `scripts/claude-persist.sh` run from
+`.replit` `onBoot` as the fallback (links `~/.claude` there and recreates `~/.local/bin/claude`). If `claude` is ever
+"not found" or has forgotten everything after a restart, run `bash scripts/claude-persist.sh` and check
+`readlink -f ~/.claude`; do not reinstall.

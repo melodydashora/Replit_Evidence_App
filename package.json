@@ -7,7 +7,8 @@
     "start": "node server.js",
     "dev": "node server.js",
     "build:dossier-pdf": "node scripts/sync-dossier-tables.js && node scripts/build-dossier-pdf.js",
-    "sync:dossier": "node scripts/sync-dossier-tables.js"
+    "sync:dossier": "node scripts/sync-dossier-tables.js",
+    "pull:uploads": "node scripts/pull-uploads.js"
   },
   "keywords": [
     "accident-reconstruction",
@@ -21,7 +22,8 @@
   "license": "UNLICENSED",
   "private": true,
   "dependencies": {
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "pg": "^8.23.0"
   },
   "engines": {
     "node": ">=18.0.0"

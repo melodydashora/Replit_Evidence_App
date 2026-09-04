@@ -26,7 +26,8 @@ This repository contains the complete forensic engineering reconstruction, 13,28
 1. Import this repository into Replit as a **Private Repl**.
 2. Click **Run**. Replit will install Express and launch `server.js` on port 3000.
 3. The web view will automatically open with the Master Legal Evidence Portal (landing page); the reconstruction is at `/reconstruction`.
-4. **Access token (required)**: in Replit **Tools → Secrets** add `CASE_ACCESS_TOKEN=your-token` (several tokens may be comma-separated). Every page and file requires it; without the secret the server answers every request with a "not configured" page. Viewers enter the token once on the sign-in page (remembered 30 days), or open a link of the form `https://your-site/?token=your-token`. "Sign out" in the page header forgets it. `CASE_PASSCODE` is accepted as an older alias.
+4. **Access tokens (required)**: in Replit **Tools → Secrets** add one secret per role: `CASE_TOKEN_OWNER` (the client: sees everything, uploads on every panel, edits the rental ledger, sets download restrictions), `CASE_TOKEN_COUNSEL` (the lawyer: uploads to the counsel and signed-documents panels, edits the ledger, sets restrictions), `CASE_TOKEN_ADJUSTER` and `CASE_TOKEN_TNC` (the Progressive claim rep and the United Financial Casualty / Uber claim: see everything, download unless a panel or file is restricted). Each may hold several tokens separated by commas. The older `CASE_ACCESS_TOKEN` still works and counts as an owner token. Every page and file requires a token; without any the server answers every request with a "not configured" page. Never put a token in a page or a log.
+4a. **Database and uploads**: files uploaded on the site, the Hertz rental ledger, the restriction checkboxes and the access log are stored in the Replit PostgreSQL database (`DATABASE_URL`, provisioned with the Repl). Without it the pages still work and the upload panels show "The upload store is not configured on this server." Run `npm run pull:uploads` in the workspace to copy uploaded files into the binder folders (set `PROD_DATABASE_URL` to the deployment's database if Replit gives it a separate one).
 5. *(Optional Google imagery)*: add `GOOGLE_MAPS_API_KEY=...` in Replit Secrets to enable the "Google Satellite (Map Tiles API)" layer in the reconstruction. The key stays on the server; tiles are proxied through `/gtiles/`.
 
 ### Option B: Local Node.js Execution
@@ -44,12 +45,14 @@ npm start
 Open `http://localhost:3000` in your web browser (start with `CASE_ACCESS_TOKEN=your-token npm start`, then enter the token).
 
 ### Routes
-`/` and `/portal` landing page · `/reconstruction` app · `/dossier` PDF · `/police-report` CR-4 · `/property-loss` Binder 12 · `/logout` forget the token · any folder URL lists its files (`?format=json` for a machine-readable listing).
+`/` and `/portal` landing page · `/reconstruction` app · `/dossier` PDF · `/police-report` CR-4 · `/property-loss` Binder 12 · `/rental-car` Binder 13 · `/correspondence` Binder 14 · `/logout` forget the token · `/api/me` the signed-in role and its permissions · any folder URL lists its files (`?format=json` for a machine-readable listing).
 
 ### Adding content (no HTML editing needed)
 | What | Where to put it | What updates |
 |---|---|---|
-| A claim, adjuster contact or status change | edit `claims_status.js` (one entry per claim) | portal "Claim Files" cards; dossier §3.1 after `npm run build:dossier-pdf` |
+| A claim, adjuster contact or status change | edit `claims_status.js` (one entry per claim: a one-paragraph `summary`, a one-sentence `next_step`, and the path of the claim's memo document, which holds the full detail) | portal "Claim Files" cards; dossier §3.1 after `npm run build:dossier-pdf` |
+| Hertz rental charges and payments | on the site, Binder 13 (`/rental-car`): add a row per charge with what the client and Progressive paid; attach the day's screenshot and the final receipt | totals, the $60/day 30-day ($1,800) limit and the amount above it, on the binder page and the portal card |
+| Screenshots, receipts, messages, signed papers | the upload panel on the relevant binder page (property loss, injury photos, claims, carrier messages, counsel documents, signed documents); owner uploads everywhere except the counsel panel, counsel uploads to its own and the signed-documents panels | the panel lists the file at once; `npm run pull:uploads` copies it into the binder folder for the git record |
 | An item lost or destroyed in the vehicle | add an entry to `12_Personal_Property_Loss_And_Vehicle_Contents/property_loss_items.js`; drop receipts/photos into `Receipts_And_Photos/` and list them under `proof` | Binder 12 table and totals; portal card summary; dossier §12.4 after the rebuild |
 | An injury photograph | copy the image into `06_Medical_Records_And_Clinical_Evidence/Pictures_Of_Bruises/`; add its date, body region and caption to `injury_photos.js` | Binder 06 gallery (the photo appears even before it has a caption); dossier §9.4 after the rebuild |
 | Any other fact | edit the dossier Markdown in binder 00, then `npm run build:dossier-pdf` | dossier PDF (the three generated tables are refreshed automatically by `npm run sync:dossier`) |

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Exhibit 12: Personal Property Lost in the Vehicle | Evidence Repository</title>
+<title>Exhibit 14: Correspondence, Counsel and Signed Documents | Evidence Repository</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -169,16 +169,23 @@
   </div>
 
   <div class="header-card">
-    <div class="eyebrow">Binder 12 &middot; Contents claim</div>
-    <h1><i class="fa-solid fa-box-open" style="color:var(--accent);"></i> Personal Property Lost in the Vehicle</h1>
-    <p class="folder-desc">Itemized list, maintained by the client, of personal property that was inside the 2025 Volkswagen Atlas (TX WHB6147) when it was struck on 08/28/2026 and was lost, damaged or destroyed. Quantities, purchase prices and claimed values are the client&rsquo;s statements; receipts, order confirmations and photographs are linked in the Proof column where they are on file in <code>Receipts_And_Photos/</code>. Contents claims are separate from the vehicle total-loss valuation (Dossier &sect;12).</p>
+    <div class="eyebrow">Binder 14 &middot; Correspondence and counsel documents</div>
+    <h1><i class="fa-solid fa-envelope-open-text" style="color:var(--accent);"></i> Correspondence, Counsel and Signed Documents</h1>
+    <p class="folder-desc">Correspondence on the two open claim files &mdash; Progressive claim 26-854858569 under the client&rsquo;s own policy and claim 26-343820011 &mdash; together with documents from counsel and signed papers. Each panel below holds the files uploaded on the site; <code>npm run pull:uploads</code> copies them into the matching folder in this binder.</p>
   </div>
 
-  <!-- Itemized list: rendered from property_loss_items.js by case_components.js -->
-  <div data-component="property-loss"></div>
+  <!-- Messages and e-mails with the two carriers -->
+  <div data-component="attachments" data-key="carrier-messages" data-title="Messages and e-mails with Progressive and the casualty group" data-desc="Screenshots of messages, e-mails and letters exchanged with the Progressive claim rep and with United Financial Casualty / Progressive Commercial on claim 26-343820011, uploaded by the client with the date of each message."></div>
 
-  <!-- Uploaded receipts and photos -->
-  <div data-component="attachments" data-key="property-loss" data-title="Receipts and photos uploaded on the site" data-desc="Order confirmations and receipts from Amazon, Best Buy and other sellers for items installed in or left in the vehicle, and photographs of the items. List each item itself in property_loss_items.js."></div>
+  <!-- Documents from counsel -->
+  <div data-component="attachments" data-key="counsel-documents" data-title="Documents from counsel" data-desc="Uploaded by counsel only; the client may download from this panel."></div>
+
+  <!-- Signed documents -->
+  <div data-component="attachments" data-key="signed-documents" data-title="Signed documents" data-desc="Engagement letters, authorisations, declarations and other signed papers; uploaded by the client or by counsel."></div>
+
+  <div class="section-title"><i class="fa-solid fa-clipboard-list" style="color:var(--accent);"></i> Access log</div>
+  <p class="folder-desc">Shown only to the owner and counsel tokens. Nothing appears here for any other token.</p>
+  <div data-component="access-log"></div>
 
   <div class="section-title"><i class="fa-solid fa-folder-open" style="color:var(--accent);"></i> Files in this binder</div>
   <table>
@@ -194,23 +201,34 @@
       <tr class="file-row">
         <td class="file-name-cell">
           <i class="fa-solid fa-folder file-icon"></i>
-          <a href="Receipts_And_Photos" class="file-link">Receipts_And_Photos</a>
+          <a href="Carrier_Messages/" class="file-link">Carrier_Messages</a>
         </td>
         <td class="file-type-cell">Folder</td>
-        <td class="file-size-cell">Receipts, order confirmations and photos of the items</td>
+        <td class="file-size-cell">Messages, e-mails and letters exchanged with Progressive and with the casualty group</td>
         <td class="file-action-cell">
-          <a href="Receipts_And_Photos" class="btn-open">Open Folder <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="Carrier_Messages/" class="btn-open">Open Folder <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
         </td>
       </tr>
       <tr class="file-row">
         <td class="file-name-cell">
-          <i class="fa-solid fa-file-code file-icon"></i>
-          <a href="property_loss_items.js" target="_blank" class="file-link">property_loss_items.js</a>
+          <i class="fa-solid fa-folder file-icon"></i>
+          <a href="Counsel_Documents/" class="file-link">Counsel_Documents</a>
         </td>
-        <td class="file-type-cell">JS</td>
-        <td class="file-size-cell">Source list behind the table above (one entry per item)</td>
+        <td class="file-type-cell">Folder</td>
+        <td class="file-size-cell">Documents from counsel</td>
         <td class="file-action-cell">
-          <a href="property_loss_items.js" target="_blank" class="btn-open">View File <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <a href="Counsel_Documents/" class="btn-open">Open Folder <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+        </td>
+      </tr>
+      <tr class="file-row">
+        <td class="file-name-cell">
+          <i class="fa-solid fa-folder file-icon"></i>
+          <a href="Signed_Documents/" class="file-link">Signed_Documents</a>
+        </td>
+        <td class="file-type-cell">Folder</td>
+        <td class="file-size-cell">Engagement letters, authorisations, declarations and other signed papers</td>
+        <td class="file-action-cell">
+          <a href="Signed_Documents/" class="btn-open">Open Folder <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
         </td>
       </tr>
     </tbody>
@@ -218,7 +236,6 @@
 
   <footer>Dashora v. Savala-Fitzpatrick &middot; TxDOT Crash ID 21609720.1 &middot; Confidential; prepared for counsel and claims review</footer>
 </div>
-<script src="property_loss_items.js"></script>
 <script src="../case_components.js"></script>
 </body>
 </html>

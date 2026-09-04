@@ -73,6 +73,15 @@
     color: var(--text-secondary);
     line-height: 1.5;
   }
+  .section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #e2e8f0;
+    margin: 28px 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
   table {
     width: 100%;
     border-collapse: collapse;
@@ -149,6 +158,7 @@
 </style>
 </head>
 <body>
+<script src="../site_header.js"></script>
 <div class="container">
   <div class="nav-bar">
     <a href="../00_START_HERE_EVIDENCE_PORTAL.html" class="back-link">
@@ -158,9 +168,13 @@
 
   <div class="header-card">
     <h1><i class="fa-solid fa-notes-medical" style="color:#ef4444;"></i> Exhibit 06: Medical Records</h1>
-    <p class="folder-desc">Patient-portal records from three post-collision visits: Baylor Scott &amp; White Medical Center &ndash; Grapevine ED after-visit summary (08/28/2026); Texas Health Frisco Emergency Department after-visit summary and ED provider notes (08/30/2026); UT Southwestern primary-care after-visit summary and progress note (09/02/2026, file UTSW_Progress_Note_Sep_2_2026.pdf); plus one client photo dated 08/29/2026 of a linear neck bruise. No custodian-certified charts are on file yet.</p>
+    <p class="folder-desc">Patient-portal records from three post-collision visits: Baylor Scott &amp; White Medical Center &ndash; Grapevine ED after-visit summary (08/28/2026); Texas Health Frisco Emergency Department after-visit summary and ED provider notes (08/30/2026); UT Southwestern primary-care after-visit summary and progress note (09/02/2026, file UTSW_Progress_Note_Sep_2_2026.pdf); plus the client&rsquo;s injury photographs in <code>Pictures_Of_Bruises/</code>, shown in the gallery below with dates and captions (the first is a linear neck mark photographed 08/29/2026). No custodian-certified charts are on file yet.</p>
   </div>
 
+  <!-- Injury photo gallery: every image in Pictures_Of_Bruises/ plus captions from injury_photos.js -->
+  <div data-component="injury-photos" data-folder="Pictures_Of_Bruises"></div>
+
+  <div class="section-title"><i class="fa-solid fa-folder-open" style="color:#ef4444;"></i> Files in this binder</div>
   <table>
     <thead>
       <tr>
@@ -247,5 +261,7 @@
     </tbody>
   </table>
 </div>
+<script src="injury_photos.js"></script>
+<script src="../case_components.js"></script>
 </body>
 </html>

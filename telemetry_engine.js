@@ -19,11 +19,32 @@
   const accidentEvent = rawData.accident_event;
   const IMPACT_GLOBAL_INDEX = 12783; // 05:00:15 AM
 
-  // --- Motion-derived headings (smooth and deterministic) ---
-  // The source CSV has no heading column; the dataset's hd field is a rough derivative that is noisy at low
-  // speed and meaningless while parked. Recompute heading from the position track (central difference) and
-  // carry the last moving heading through stationary samples. Samples from the impact onward take the
-  // scripted rest heading used by the turn override, so the marker does not snap when the override ends.
+  // --- Motion model: de-jittered path, speed-driven timing, smooth heading ---------------------------
+  // The log is 1 Hz. Its speeds are smooth, but its positions carry 1-2 m of noise (worst while stopped), so
+  // pacing the marker from fix to fix makes the vehicle surge every second and creep at red lights, and the
+  // scripted left turn used to hand off from the raw track with a snap. Instead:
+  //   1. build one path through de-jittered fixes (each stop's fixes collapse to a single point; the final
+  //      left turn and the rest point are the client's-account waypoints checked against the fixes);
+  //   2. move the vehicle along that path by integrating the LOGGED SPEED, with a slowly varying correction so
+  //      it never drifts more than a metre or two from the fixes and is exactly on them at every stop;
+  //   3. take heading from the path tangent, so it turns as smoothly as the path does.
+  const MS_PER_KT = 0.514444;
+  const N_PTS = allPoints.length;
+  // Impact point: 0.6 m west of the first zero-speed fix (05:00:15), placed so the final metres of the turn run due
+  // north as the client describes (the two fixes either side of the strike are 3.7 m apart, too close to fix a
+  // bearing on their own). Rest point: where the vehicle came to rest. The phone log's position walks from the
+  // impact fix to (32.955074, -97.038170) over the following minute and stays there, and the dashcam's own GPS stamp
+  // at 05:09:29 reads N 32.955074 W 97.038170 (0 mph): two receivers agree, so that is the rest position, about 6 m
+  // west-south-west of the strike and still inside the intersection. The phone's slow walk is its motion filter
+  // converging after the sudden stop. HOW the vehicle moved between the strike and the rest point is not recorded
+  // (the client was unconscious; no sensor logged it): the replay only carries it from one point to the other.
+  const IMPACT_POINT = { lat: 32.955088, lon: -97.038110 }; // where the path ends (the strike)
+  const REST_POINT = { lat: 32.955074, lon: -97.038170 };   // dashcam GPS stamp 05:09:29; phone log 05:01:22 onward
+  const IMPACT_REST = IMPACT_POINT;                          // the path's final point; the shove to REST_POINT is applied on top
+  const TURN_WAYPOINTS = { 12781: { lat: 32.955036, lon: -97.038190 }, 12782: { lat: 32.955055, lon: -97.038118 } };
+  const SHOVE_DLAT = REST_POINT.lat - IMPACT_POINT.lat, SHOVE_DLON = REST_POINT.lon - IMPACT_POINT.lon; // strike -> rest
+  const SHOVE_SEC = 1.2; // display duration of that move (a ~6 m slide decelerating at ~0.7 g would take about this long)
+
   function bearingDeg(a, b) {
     const toRad = Math.PI / 180;
     const dLon = (b.lon - a.lon) * toRad;
@@ -31,21 +52,239 @@
     const x = Math.cos(a.lat * toRad) * Math.sin(b.lat * toRad) - Math.sin(a.lat * toRad) * Math.cos(b.lat * toRad) * Math.cos(dLon);
     return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
   }
-  const motionHd = new Float32Array(allPoints.length);
-  {
-    let last = allPoints[0].hd || 0;
-    for (let i = 0; i < allPoints.length; i++) {
-      if (i >= IMPACT_GLOBAL_INDEX) { motionHd[i] = 0.0; continue; }
-      const p = allPoints[i];
-      if (p.spd >= 1.5) {
-        const a = allPoints[Math.max(0, i - 1)];
-        const b = allPoints[Math.min(allPoints.length - 1, i + 1)];
-        if (a !== b && (a.lat !== b.lat || a.lon !== b.lon)) last = bearingDeg(a, b);
+  const M_PER_DEG_LAT = 111320, M_PER_DEG_LON = 111320 * Math.cos(32.955 * Math.PI / 180);
+  function metresBetween(lat1, lon1, lat2, lon2) {
+    return Math.hypot((lat2 - lat1) * M_PER_DEG_LAT, (lon2 - lon1) * M_PER_DEG_LON);
+  }
+
+  const secsArr = allPoints.map(p => { const t = Date.parse(p.ts); return Number.isNaN(t) ? NaN : t / 1000; });
+  const dtArr = new Float64Array(N_PTS); // seconds to the next sample: 1 normally, >2 only at a log gap
+  for (let i = 0; i < N_PTS - 1; i++) { const d = secsArr[i + 1] - secsArr[i]; dtArr[i] = (Number.isFinite(d) && d > 0) ? d : 1; }
+  dtArr[N_PTS - 1] = 1;
+  if (secsArr.some(t => !Number.isFinite(t))) console.warn('Motion model: some ts fields did not parse; log gaps may go undetected.');
+  const isGapAfter = i => dtArr[i] > 2.5;
+  const vMs = new Float64Array(N_PTS);
+  for (let i = 0; i < N_PTS; i++) vMs[i] = (allPoints[i].kt || 0) * MS_PER_KT;
+
+  // Stops: runs of two or more samples under 0.6 m/s (about 1.3 mph). Two runs separated by one or two
+  // slow samples (a GPS speed blip while waiting) are one stop.
+  const inStop = new Uint8Array(N_PTS);
+  for (let i = 0; i < N_PTS;) {
+    if (vMs[i] < 0.6) {
+      let j = i;
+      while (j + 1 < N_PTS && vMs[j + 1] < 0.6 && !isGapAfter(j)) j++;
+      if (j - i + 1 >= 2) for (let k = i; k <= j; k++) inStop[k] = 1;
+      i = j + 1;
+    } else i++;
+  }
+  for (let i = 1; i < N_PTS - 1; i++) {
+    if (inStop[i] || !inStop[i - 1]) continue;
+    let j = i; while (j < N_PTS && !inStop[j] && j - i < 2 && vMs[j] < 2.5 && !isGapAfter(j - 1)) j++;
+    if (j < N_PTS && inStop[j] && j - i <= 2) for (let k = i; k < j; k++) inStop[k] = 1;
+  }
+
+  // De-jittered positions
+  const pLat = new Float64Array(N_PTS), pLon = new Float64Array(N_PTS);
+  for (let i = 0; i < N_PTS; i++) { pLat[i] = allPoints[i].lat; pLon[i] = allPoints[i].lon; }
+  for (let i = 0; i < N_PTS;) { // each stop -> the mean of its fixes (value 2 marks a neighbour already folded in)
+    if (inStop[i] === 1) {
+      let j = i;
+      while (j + 1 < N_PTS && inStop[j + 1] === 1 && !isGapAfter(j)) j++;
+      let sl = 0, so = 0;
+      for (let k = i; k <= j; k++) { sl += allPoints[k].lat; so += allPoints[k].lon; }
+      const ml = sl / (j - i + 1), mo = so / (j - i + 1);
+      for (let k = i; k <= j; k++) { pLat[k] = ml; pLon[k] = mo; }
+      // neighbouring fixes within 2 m of the stop point are noise at walking pace: fold them in
+      for (const k of [i - 1, i - 2, j + 1, j + 2]) {
+        if (k < 0 || k >= N_PTS || inStop[k]) continue;
+        if ((k === i - 2 && inStop[i - 1] !== 2) || (k === j + 2 && inStop[j + 1] !== 2)) continue;
+        const beyond1 = k < i ? k - 1 : k + 1, beyond2 = k < i ? k - 2 : k + 2;
+        if ((beyond1 >= 0 && beyond1 < N_PTS && inStop[beyond1]) || (beyond2 >= 0 && beyond2 < N_PTS && inStop[beyond2])) continue;
+        if (k < i && isGapAfter(k)) continue;
+        if (k > j && isGapAfter(k - 1)) continue;
+        if (metresBetween(pLat[k], pLon[k], ml, mo) < 2.0 && vMs[k] < 1.5) { pLat[k] = ml; pLon[k] = mo; inStop[k] = 2; }
       }
-      motionHd[i] = last;
+      i = j + 1;
+    } else i++;
+  }
+  { // light three-point smoothing of moving fixes (takes out the metre-scale alternation); lighter when slow
+    const sl = Float64Array.from(pLat), so = Float64Array.from(pLon);
+    for (let i = 1; i < N_PTS - 1; i++) {
+      if (inStop[i] || inStop[i - 1] || inStop[i + 1] || isGapAfter(i - 1) || isGapAfter(i)) continue;
+      const w = vMs[i] > 8 ? 0.25 : 0.15;
+      pLat[i] = sl[i] * (1 - 2 * w) + (sl[i - 1] + sl[i + 1]) * w;
+      pLon[i] = so[i] * (1 - 2 * w) + (so[i - 1] + so[i + 1]) * w;
     }
   }
-  const overrideEntryHd = motionHd[12780]; // heading the scripted turn starts from (no snap at the boundary)
+  for (const k of Object.keys(TURN_WAYPOINTS)) { const i = Number(k); if (i < N_PTS) { pLat[i] = TURN_WAYPOINTS[k].lat; pLon[i] = TURN_WAYPOINTS[k].lon; } }
+  // The strike instant: the Atlas reaches IMPACT_POINT partway through the second before the first zero-speed fix.
+  const STRIKE_T_IMP = (IMPACT_GLOBAL_INDEX >= 1 && vMs[IMPACT_GLOBAL_INDEX - 1] > 0)
+    ? metresBetween(pLat[IMPACT_GLOBAL_INDEX - 1], pLon[IMPACT_GLOBAL_INDEX - 1], IMPACT_POINT.lat, IMPACT_POINT.lon) / vMs[IMPACT_GLOBAL_INDEX - 1] : 0;
+  const STRIKE_G = IMPACT_GLOBAL_INDEX - 1 + Math.min(1, STRIKE_T_IMP); // global float index of the strike (about 12782.49)
+  let IMPACT_REST_END = IMPACT_GLOBAL_INDEX; // last sample of the rest run that follows the impact (before the log gap)
+  for (let k = IMPACT_GLOBAL_INDEX; k < N_PTS && inStop[k]; k++) { pLat[k] = IMPACT_POINT.lat; pLon[k] = IMPACT_POINT.lon; IMPACT_REST_END = k; if (isGapAfter(k)) break; }
+
+  for (let i = 0; i < N_PTS; i++) if (inStop[i] === 2) inStop[i] = 1;
+  // Path length and speed-integrated distance
+  const segLen = new Float64Array(N_PTS), S = new Float64Array(N_PTS), Dv = new Float64Array(N_PTS);
+  for (let i = 0; i < N_PTS - 1; i++) {
+    segLen[i] = metresBetween(pLat[i], pLon[i], pLat[i + 1], pLon[i + 1]);
+    S[i + 1] = S[i] + segLen[i];
+    Dv[i + 1] = Dv[i] + (isGapAfter(i) ? segLen[i] : 0.5 * (vMs[i] + vMs[i + 1]) * dtArr[i]);
+  }
+  // Drift between the two (GPS position error accumulating against the speed integral): smooth it over ~15 s
+  // within each gap-free block, and pin it exactly at anchors (stops, the impact, block edges).
+  const eRaw = new Float64Array(N_PTS), eSmooth = new Float64Array(N_PTS), eFinal = new Float64Array(N_PTS);
+  for (let i = 0; i < N_PTS; i++) eRaw[i] = S[i] - Dv[i];
+  {
+    const W = 7;
+    for (let i = 0; i < N_PTS; i++) {
+      let sum = 0, n = 0;
+      for (let j = i - W; j <= i + W; j++) {
+        if (j < 0 || j >= N_PTS) continue;
+        let ok = true;
+        for (let m = Math.min(i, j); m < Math.max(i, j); m++) if (isGapAfter(m)) { ok = false; break; }
+        if (!ok) continue;
+        sum += eRaw[j]; n++;
+      }
+      eSmooth[i] = n ? sum / n : eRaw[i];
+    }
+    const isAnchor = i => inStop[i] || i === IMPACT_GLOBAL_INDEX || i === IMPACT_GLOBAL_INDEX - 1 || i === 0 || i === N_PTS - 1 || (i > 0 && isGapAfter(i - 1)) || isGapAfter(i);
+    const anchorDist = new Float64Array(N_PTS);
+    let last = -1e9;
+    for (let i = 0; i < N_PTS; i++) { if (isAnchor(i)) last = i; anchorDist[i] = i - last; }
+    let next = 1e9;
+    for (let i = N_PTS - 1; i >= 0; i--) { if (isAnchor(i)) next = i; anchorDist[i] = Math.min(anchorDist[i], next - i); }
+    for (let i = 0; i < N_PTS; i++) {
+      const x = Math.min(1, anchorDist[i] / 8);
+      const taper = 1 - x * x * (3 - 2 * x);
+      eFinal[i] = eSmooth[i] + (eRaw[i] - eSmooth[i]) * taper;
+    }
+  }
+
+  // Reversing: where the path doubles back (direction change over 120 degrees) at low speed the vehicle is
+  // backing up, so the heading is held instead of flipping with the direction of travel.
+  const reverseSeg = new Uint8Array(N_PTS);
+  {
+    let lastDir = null;
+    for (let i = 0; i < N_PTS - 1; i++) {
+      if (segLen[i] < 0.3) continue;
+      const dir = bearingDeg({ lat: pLat[i], lon: pLon[i] }, { lat: pLat[i + 1], lon: pLon[i + 1] });
+      if (lastDir !== null) {
+        const dd = Math.abs(((dir - lastDir) % 360 + 540) % 360 - 180);
+        if (dd > 120 && vMs[i] < 6 && vMs[i + 1] < 6) { reverseSeg[i] = 1; continue; }
+      }
+      lastDir = dir;
+    }
+  }
+  // Centripetal Catmull-Rom through the de-jittered fixes (no overshoot where spacing changes)
+  function pathSegmentAt(d) {
+    if (d <= 0) return 0;
+    if (d >= S[N_PTS - 1]) return N_PTS - 2;
+    let lo = 0, hi = N_PTS - 2;
+    while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (S[mid] <= d) lo = mid; else hi = mid - 1; }
+    return lo;
+  }
+  function distinctBefore(k) { let j = k - 1; for (let n = 0; j > 0 && n < 400 && metresBetween(pLat[j], pLon[j], pLat[k], pLon[k]) < 0.3; n++) j--; return Math.max(0, j); }
+  function distinctAfter(k) { let j = k + 1; for (let n = 0; j < N_PTS - 1 && n < 400 && metresBetween(pLat[j], pLon[j], pLat[k], pLon[k]) < 0.3; n++) j++; return Math.min(N_PTS - 1, j); }
+  function pathPointOnSegment(k, u) {
+    const gi = i => Math.max(0, Math.min(N_PTS - 1, i));
+    const kb = distinctBefore(k), ka = distinctAfter(gi(k + 1));
+    const y0 = pLat[kb], x0 = pLon[kb], y1 = pLat[gi(k)], x1 = pLon[gi(k)];
+    const y2 = pLat[gi(k + 1)], x2 = pLon[gi(k + 1)], y3 = pLat[ka], x3 = pLon[ka];
+    if (segLen[k] < 0.05) return [y1, x1];
+    const kn = (ya, xa, yb, xb) => Math.max(1e-3, Math.sqrt(metresBetween(ya, xa, yb, xb)));
+    const t0 = 0, t1 = t0 + kn(y0, x0, y1, x1), t2 = t1 + kn(y1, x1, y2, x2), t3 = t2 + kn(y2, x2, y3, x3);
+    const t = t1 + (t2 - t1) * Math.max(0, Math.min(1, u));
+    const mix = (a, b, ta, tb) => { const f = (t - ta) / (tb - ta); return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f]; };
+    const P0 = [y0, x0], P1 = [y1, x1], P2 = [y2, x2], P3 = [y3, x3];
+    const A1 = mix(P0, P1, t0, t1), A2 = mix(P1, P2, t1, t2), A3 = mix(P2, P3, t2, t3);
+    const B1 = mix(A1, A2, t0, t2), B2 = mix(A2, A3, t1, t3);
+    return mix(B1, B2, t1, t2);
+  }
+  function pathPointAt(d) {
+    const k = pathSegmentAt(d);
+    const u = segLen[k] > 0 ? (d - S[k]) / segLen[k] : 0;
+    return pathPointOnSegment(k, u);
+  }
+  function pathHeadingAt(d) {
+    const dMax = S[N_PTS - 1];
+    const probe = (d0, d1) => {
+      const a = pathPointAt(Math.max(0, d0)), b = pathPointAt(Math.min(dMax, d1));
+      return metresBetween(a[0], a[1], b[0], b[1]) < 0.3 ? null : bearingDeg({ lat: a[0], lon: a[1] }, { lat: b[0], lon: b[1] });
+    };
+    return probe(d - 1.5, d + 1.5) || probe(d, d + 3.0) || probe(d - 3.0, d) || null;
+  }
+  // Stops: the heading while stopped is the chord across the stop (8 m before to 8 m after), which is immune to
+  // the metre or so of lateral scatter in the stop fixes; the per-second heading interpolation eases into it.
+  const stopHead = new Float32Array(N_PTS);
+  for (let i = 0; i < N_PTS;) {
+    if (!inStop[i]) { i++; continue; }
+    let j = i; while (j + 1 < N_PTS && inStop[j + 1] && !isGapAfter(j)) j++;
+    const dStop = S[i], dMax = S[N_PTS - 1];
+    const a = pathPointAt(Math.max(0, dStop - 8)), b = pathPointAt(Math.min(dMax, dStop + 8));
+    let h = metresBetween(a[0], a[1], b[0], b[1]) < 0.5 ? null : bearingDeg({ lat: a[0], lon: a[1] }, { lat: b[0], lon: b[1] });
+    if (h === null) { const c = pathPointAt(Math.max(0, dStop - 8)); h = metresBetween(c[0], c[1], pLat[i], pLon[i]) < 0.5 ? (i > 0 ? (allPoints[i - 1].hd || 0) : 0) : bearingDeg({ lat: c[0], lon: c[1] }, { lat: pLat[i], lon: pLon[i] }); }
+    for (let k = i; k <= j; k++) stopHead[k] = h;
+    i = j + 1;
+  }
+  function blendHeading(from, to, w) { let dh = ((to - from) % 360 + 540) % 360 - 180; return ((from + dh * w) % 360 + 360) % 360; }
+  // Heading at each sample, carried through stops. From the impact to the end of the rest run the heading is
+  // IMPACT_HEADING (due north: the client's account, the dossier and the post-crash dashcam frames).
+  const IMPACT_HEADING = 0.0; // client's account and the dossier: facing due north into the SH 121 ramp at impact
+  const hdArr = new Float32Array(N_PTS);
+  { let last = allPoints[0].hd || 0;
+    for (let i = 0; i < N_PTS; i++) {
+      if (i >= IMPACT_GLOBAL_INDEX && i <= IMPACT_REST_END) { hdArr[i] = IMPACT_HEADING; last = IMPACT_HEADING; continue; }
+      if (inStop[i]) { hdArr[i] = stopHead[i]; last = stopHead[i]; continue; }
+      if (reverseSeg[i] || (i > 0 && reverseSeg[i - 1])) { hdArr[i] = last; continue; }
+      const h = pathHeadingAt(S[i]); if (h !== null) last = h; hdArr[i] = last;
+    } }
+
+  // Vehicle state along the path at a global float index
+  function motionAt(g) {
+    const i = Math.max(0, Math.min(N_PTS - 2, Math.floor(g)));
+    const tau = Math.min(1, Math.max(0, g - i));
+    let d, v;
+    let shove = 0; // fraction of the sideways shove applied (0 before impact, 1 once at rest)
+    if (i === IMPACT_GLOBAL_INDEX - 1) {
+      // The impact second: speed held along the path to the strike point, then the move to the rest point over
+      // SHOVE_SEC (how the vehicle actually moved is unrecorded), then rest.
+      const v0 = vMs[i], tImp = Math.min(1, STRIKE_T_IMP);
+      if (tau <= tImp) { d = S[i] + v0 * tau; v = v0; }
+      else if (tau <= tImp + SHOVE_SEC) { const q = (tau - tImp) / SHOVE_SEC; d = S[i + 1]; v = 0; shove = 1 - (1 - q) * (1 - q); }
+      else { d = S[i + 1]; v = 0; shove = 1; }
+    } else if (g >= IMPACT_GLOBAL_INDEX && i <= IMPACT_REST_END) {
+      // the move to the rest point may still be under way in the first part of the second after the strike
+      const q = Math.min(1, Math.max(0, (g - STRIKE_G) / SHOVE_SEC));
+      d = S[i]; v = 0; shove = 1 - (1 - q) * (1 - q);
+    } else if (isGapAfter(i)) {
+      d = S[i] + segLen[i] * tau; v = vMs[i] + (vMs[i + 1] - vMs[i]) * tau;
+    } else if (inStop[i] && inStop[i + 1]) {
+      d = S[i]; v = 0;
+    } else {
+      const v0 = vMs[i], v1 = vMs[i + 1];
+      const dv = Dv[i] + (v0 * tau + 0.5 * (v1 - v0) * tau * tau) * dtArr[i];
+      const ec = eFinal[i] + (eFinal[i + 1] - eFinal[i]) * tau;
+      d = dv + ec; v = v0 + (v1 - v0) * tau;
+    }
+    d = Math.max(S[Math.max(0, i - 1)] - 10, Math.min(S[Math.min(N_PTS - 1, i + 2)] + 10, d)); // never wander far from the neighbouring fixes
+    const pos = pathPointAt(d);
+    if (shove > 0) { pos[0] += SHOVE_DLAT * shove; pos[1] += SHOVE_DLON * shove; }
+    // Heading: the per-second path-tangent headings (hdArr: chord across stops, held while reversing) interpolated
+    // the short way round, so the vehicle never rotates faster than the fixes say it did; over the impact second it
+    // settles onto the rest heading and holds it.
+    let hd;
+    if (i === IMPACT_GLOBAL_INDEX - 1) {
+      const w = Math.min(1, Math.max(0, tau / Math.max(0.1, Math.min(1, STRIKE_T_IMP))));
+      hd = blendHeading(hdArr[i], IMPACT_HEADING, w);
+    } else if (g >= IMPACT_GLOBAL_INDEX) {
+      hd = IMPACT_HEADING;
+    } else {
+      hd = blendHeading(hdArr[i], hdArr[Math.min(N_PTS - 1, i + 1)], tau);
+    }
+    return { lat: pos[0], lon: pos[1], hd, vMs: v, d };
+  }
   let signalScenario = 'client'; // 'client' (green arrow, opposing red) | 'cr4' (flashing yellow arrow, opposing green)
   let isNightMode = true;        // the collision happened at 05:00 in darkness (CR-4: DARK, LIGHTED)
 
@@ -67,6 +306,22 @@
 
   let currentZoom = 18.0;
   let targetZoom = 18.0;
+  let camLat = null, camLon = null, camLastMs = null; // eased follow-camera centre
+  let camSettledMs = 0, camUnsettled = false;         // continuous-zoom bookkeeping (see settleCamera)
+
+  // Continuous zoom without tile churn. map.setView(..., {animate:false}) resets the view, and Leaflet's GridLayer
+  // discards every tile on the 'viewprereset' it fires, so calling it once per frame while the zoom glides rebuilt
+  // the imagery ~60 times a second (measured 2026-09-04: about 1,000 tile adds and removes per second during the
+  // final 20 s, tiles never reaching full opacity: the "flashing" at the end). The follow camera therefore moves
+  // the way Leaflet's own pinch-zoom handler does (map._move with pinch data keeps the loaded tiles and only
+  // scales them) and settles the view a few times a second and once more when the zoom comes to rest:
+  // a plain 'zoom' event lets the tile layers load the level in view and prune the old one without discarding
+  // anything, and zoomend/moveend re-project the vector layers. Leaflet 1.9.4 internals; pinned in index.html.
+  function settleCamera(nowMs) {
+    map.fire('zoom');
+    map._moveEnd(true);
+    camSettledMs = nowMs; camUnsettled = false;
+  }
 
   // --- DOM Elements ---
   const mapElement = document.getElementById('map');
@@ -148,7 +403,7 @@
   const map = L.map('map', {
     zoomControl: false,
     attributionControl: false,
-    zoomSnap: 0.05 // fractional zoom so the follow camera eases instead of stepping whole levels
+    zoomSnap: 0 // continuous fractional zoom so the follow camera glides instead of stepping
   }).setView([32.955086, -97.038101], 18);
 
   L.control.zoom({ position: 'bottomright' }).addTo(map);
@@ -200,12 +455,21 @@
   if (!googleTilesAvailable) {
     document.querySelectorAll('option[value="google_satellite"]').forEach(opt => opt.remove());
     delete tileLayers.google_satellite;
+  } else {
+    // Prefer Google imagery when it is available: at this interchange the ArcGIS tiles sit about 2.5 m east of
+    // the GPS fixes (the stopped vehicle appears inside the west crosswalk), while Google's imagery puts the same
+    // fixes at the stop line. It also zooms to level 21.
+    map.removeLayer(tileLayers.satellite_hybrid);
+    tileLayers.google_satellite.addTo(map);
+    currentLayer = tileLayers.google_satellite;
+    document.querySelectorAll('#mapLayerSelect, #mobileMapLayerSelect').forEach(sel => { sel.value = 'google_satellite'; });
   }
   // Google Maps Platform terms require visible attribution while its imagery is shown.
   const googleAttribution = L.control.attribution({ position: 'bottomleft', prefix: false });
   googleAttribution.addAttribution('Imagery &copy; Google');
   map.on('layeradd', (e) => { if (tileLayers.google_satellite && e.layer === tileLayers.google_satellite) googleAttribution.addTo(map); });
   map.on('layerremove', (e) => { if (tileLayers.google_satellite && e.layer === tileLayers.google_satellite) googleAttribution.remove(); });
+  if (googleTilesAvailable) googleAttribution.addTo(map);
 
   // Polyline Paths & Markers Layer Group
   let routePolyline = null;
@@ -434,17 +698,18 @@
         </div>
       `;
       const impactIcon = L.divIcon({ html: impactIconHtml, className: 'impact-custom-icon' });
-      // Point of physical impact on the right middle/rear flank of the Atlas
+      // Point of physical impact: the BMW front against the Atlas right side (CR-4: 3 o'clock angular; client: centre to rear passenger side)
       accidentMarker = L.marker([32.955086, -97.038085], { icon: impactIcon, zIndexOffset: 990 })
         .addTo(map)
         .bindPopup(`
           <div class="event-popup-content">
-            <div class="event-popup-title impact"><i class="fa-solid fa-burst"></i> TWO-VEHICLE COLLISION SITE (T-BONE)</div>
+            <div class="event-popup-title impact"><i class="fa-solid fa-burst"></i> TWO-VEHICLE COLLISION SITE (ANGULAR, RIGHT FRONT QUARTER)</div>
             <div class="event-popup-desc">
-              <strong>Timestamp:</strong> 05:00:15 AM<br>
-              <strong>Unit 1 (Client 2025 VW Atlas):</strong> Completed left turn under green arrow; oriented straight North (0.0° N) towards SH 121 entrance ramp. <span style="color:#10b981; font-weight:700;">Front 100% Undamaged.</span> Sustained <strong>3 O'CLOCK angular impact to right middle/rear side</strong>.<br>
-              <strong>Unit 2 (2014 White BMW 550, TX: vdw2544, Uninsured):</strong> Westbound at 42 MPH trying to beat yellow light; crossed intersection line as Unit 1 was already through turn. Sustained <strong>12 O'CLOCK distributed front-end impact</strong> against the right flank of the Atlas.
-            </div>
+          <strong>Timestamp:</strong> 05:00:15 AM (GPS: first zero-speed fix; impact about 0.4 s earlier)<br>
+          <strong>Unit 1 (Client 2025 VW Atlas):</strong> completed the left turn on a green arrow (client's account) and was facing due north into the ramp at impact. It came to rest about 6 m west-south-west of the strike, still inside the intersection and facing north (dashcam GPS stamp 05:09:29: N 32.955074 W 97.038170, the same point the phone log settles on; the post-crash dashcam frames show the frontage road behind and the Bass Pro Dr mast arm ahead). How it moved between the strike and that point is not recorded: the client was unconscious, and the replay simply carries the vehicle from one point to the other. <strong>Front bumper undamaged.</strong> Where the strike landed: client, centre to slightly rear of the passenger side; CR-4 damage entry, <strong>3 o'clock, "right front quarter damage, angular impact"</strong>; photographs of the damage would settle it.<br>
+          <strong>Unit 2 (2014 White BMW 550, TX: vdw2544, no proof of financial responsibility on the CR-4):</strong> westbound in the second lane from the median (client's account) at an estimated 45&ndash;50 mph (simulated at 45; not logged). Client's account: it did not slow; she believes the driver was trying to make the yellow. CR-4 damage entry: <strong>12 o'clock distributed front-end impact</strong>.<br>
+          <strong>Accounts:</strong> the CR-4 narrative says Unit 1 struck Unit 2 while turning left on a flashing yellow light, its crash diagram draws Unit 1 mid-turn, angled north-east, with its right front corner against Unit 2's front, and its contributing-factor block (marked "investigator's opinion") lists two factors against Unit 1 and none against Unit 2; the client says she was facing north, that both vehicles reached the point at the same instant, and that she held her speed so the strike would land at the centre or rear of the passenger side rather than the front passenger door.
+        </div>
           </div>
         `, { className: 'event-map-popup' });
     }
@@ -478,7 +743,13 @@
     if (signalMarkerU1) map.removeLayer(signalMarkerU1);
     if (signalMarkerU2) map.removeLayer(signalMarkerU2);
 
-    // 1. West Ramp Terminal Signal (Where You Stopped at 04:59:18 AM)
+    // Signal heads are drawn where a driver sees them: on the mast arm across the intersection, over the far side of
+    // each approach (owner, 2026-09-04: "ahead of me on the other side"), not at the near-side stop line. Positions
+    // were measured on the imagery (ArcGIS z19, shifted 2.5 m west to the GPS/Google frame): the west-terminal head
+    // ~29 m east of the west stop line, past the SB frontage road; the eastbound left-turn head ~21 m east of the
+    // strike point, past the NB frontage road; the westbound through head ~15 m west of the strike point, past the
+    // west edge of the intersection.
+    // 1. West Ramp Terminal Signal: the heads hang over the far (east) side of the SB frontage-road crossing; the stop line where the vehicle waited is on the near side
     const signalWestHtml = `
       <div class="map-signal-marker-container" id="mapSignalWestContainer">
         <div class="map-signal-head">
@@ -489,14 +760,14 @@
         <div class="map-signal-label" id="mapWestLabel" style="color:#f87171;">WEST: 26s RED</div>
       </div>
     `;
-    signalMarkerWest = L.marker([32.955082, -97.041977], {
+    signalMarkerWest = L.marker([32.955052, -97.041668], {
       icon: L.divIcon({ html: signalWestHtml, className: 'map-signal-icon-west', iconSize: [44, 52], iconAnchor: [22, 26] }),
       zIndexOffset: 960
     }).addTo(map).bindPopup(`
       <div class="event-popup-content">
-        <div class="event-popup-title" style="color:#38bdf8;"><i class="fa-solid fa-traffic-light"></i> 1. West Ramp Terminal Signal (Where You Stopped)</div>
+        <div class="event-popup-title" style="color:#38bdf8;"><i class="fa-solid fa-traffic-light"></i> 1. West Ramp Terminal Signal</div>
         <div class="event-popup-desc">
-          <strong>Location:</strong> Bass Pro Dr & TX-121 Southbound Ramp (Coordinates: 32.955082, -97.041977)<br>
+          <strong>Location:</strong> Bass Pro Dr &amp; TX-121 southbound frontage road. The signal heads hang over the far (east) side of the crossing; the vehicle waited at the near-side stop line about 29 m west of them (GPS: 32.955086, -97.041975).<br>
           <strong>04:59:18 - 04:59:44 AM:</strong> Stopped at 0.0 MPH for 26.0s on <strong>SOLID RED</strong>.<br>
           <strong>04:59:45 AM:</strong> Light turned <strong>SOLID GREEN</strong>, releasing your vehicle to cross the 1,200 ft bridge over SH 121.
         </div>
@@ -515,7 +786,7 @@
         <div class="map-signal-label" id="mapU1Label" style="color:#34d399;">TURN GREEN</div>
       </div>
     `;
-    signalMarkerU1 = L.marker([32.955030, -97.038190], {
+    signalMarkerU1 = L.marker([32.955065, -97.037891], {
       icon: L.divIcon({ html: signalU1Html, className: 'map-signal-icon-u1', iconSize: [40, 60], iconAnchor: [20, 30] }),
       zIndexOffset: 950
     }).addTo(map).bindPopup(`
@@ -541,8 +812,8 @@
         <div class="event-popup-title" style="color:#38bdf8;"><i class="fa-solid fa-road"></i> Painted Pavement Left-Turn Arrow (05:00:11 AM)</div>
         <div class="event-popup-desc">
           <strong>Street View Confirmation:</strong> Matches the white turn arrow painted on the concrete lane in your photo.<br>
-          <strong>05:00:05 - 05:00:10 AM:</strong> Driver decelerated from 39.1 to 23 MPH because ahead signals displayed amber/orange, waiting for the turn arrow.<br>
-          <strong>05:00:11 AM:</strong> Right as the front tires crossed this pavement marking, the overhead <strong>Green Arrow</strong> illuminated, and driver accelerated through the turn.
+          <strong>05:00:05 - 05:00:10 AM:</strong> Driver decelerated from 39.1 to 27 MPH because the through signals ahead displayed amber, then red; the left-turn arrow stayed red until they cleared (client's account).<br>
+          <strong>05:00:11 AM:</strong> Right as the front tires crossed this pavement marking, the overhead <strong>Green Arrow</strong> illuminated (client's account), and the driver entered the turn without stopping at about 20 mph (GPS: 22.8 to 19.8 mph over 05:00:12&ndash;05:00:14).
         </div>
       </div>
     `, { className: 'event-map-popup' });
@@ -560,9 +831,9 @@
       <div class="event-popup-content">
         <div class="event-popup-title" style="color:#ef4444;"><i class="fa-solid fa-eye"></i> Driver Viewpoint at 05:00:14 AM (client's account)</div>
         <div class="event-popup-desc">
-          <strong>Orientation:</strong> Facing 0.0° Straight North into Frontage Rd / SH 121 Ramp (exact perspective of Google Street View photo).<br>
-          <strong>Eyewitness Observation:</strong> Looking east through right window past Waffle House / Shell, driver observed the white BMW approaching the crosswalk at 42 MPH without slowing.<br>
-          <strong>Point of No Escape:</strong> Unit 1 was fully committed and aligned north. Realizing the BMW would violate the signal, collision was physically unavoidable with nowhere to steer.
+          <strong>Orientation:</strong> Facing due north into the SH 121 ramp at impact (client's account and dossier; the post-crash dashcam frames look north at the Bass Pro Dr mast arm with the frontage road behind). The GPS fixes before and at the impact are 3.7 m apart, too close to fix a heading on their own. The vehicle came to rest about 6 m west-south-west of the strike (dashcam GPS 05:09:29 and the phone log agree); whether it spun or slid to get there is not recorded.<br>
+          <strong>Eyewitness Observation:</strong> Looking east through the right window past Waffle House / Shell, the driver saw the white BMW coming on in the second westbound lane from the median at what felt like 45 to 50 mph; it was a little behind the stop line when she expected it to stop, and it did not.<br>
+          <strong>What she saw (client's account):</strong> the far-side heads for the northbound frontage road ahead of her showing red, and the BMW to her right; no signal faces the ramp from the right because the frontage road is one-way. She watched the BMW, judged it had time to stop, and when she saw it was accelerating rather than stopping she knew it would hit her and braced. Committed to the turn with curbs ahead, she held her speed and carried on past its path so the strike would land at the reinforced centre or slightly rear of the passenger side rather than the front passenger door. Both vehicles reached the point at the same moment. She was unconscious from the impact and does not know how the car moved afterwards.
         </div>
       </div>
     `, { className: 'event-map-popup' });
@@ -577,7 +848,7 @@
         <div class="map-signal-label" id="mapU2Label" style="color:#f87171;">THRU RED</div>
       </div>
     `;
-    signalMarkerU2 = L.marker([32.955130, -97.037980], {
+    signalMarkerU2 = L.marker([32.955137, -97.038253], {
       icon: L.divIcon({ html: signalU2Html, className: 'map-signal-icon-u2', iconSize: [40, 50], iconAnchor: [20, 25] }),
       zIndexOffset: 950
     }).addTo(map).bindPopup(`
@@ -651,7 +922,7 @@
     // 2g. Aloft Hotel Uber Pickup Route Destination Beacon
     const aloftBeaconHtml = `
       <div style="background:rgba(15,23,42,0.92); border:1.5px solid #a855f7; border-radius:6px; padding:2px 6px; box-shadow:0 3px 8px rgba(0,0,0,0.6); display:flex; align-items:center; gap:4px; font-size:9.5px; font-weight:800; color:#a855f7; white-space:nowrap;">
-        <i class="fa-solid fa-hotel" style="color:#a855f7;"></i> Destination: Aloft Hotel (Uber Period 2)
+        <i class="fa-solid fa-hotel" style="color:#a855f7;"></i> Pickup: Aloft Hotel (client's account, Period 2)
       </div>
     `;
     L.marker([32.956600, -97.037800], {
@@ -661,8 +932,8 @@
       <div class="event-popup-content">
         <div class="event-popup-title" style="color:#a855f7;"><i class="fa-solid fa-hotel"></i> Accepted Uber Dispatch Destination</div>
         <div class="event-popup-desc">
-          <strong>Destination:</strong> Aloft Dallas DFW Airport Grapevine (1033 N Main St / N SH 121) en route to DFW Airport.<br>
-          <strong>Status:</strong> Active Period 2 commercial dispatch accepted at 04:59 AM ($12.07 upfront fare). Rider canceled post-crash at 05:05 AM.
+          <strong>Pickup (client's account):</strong> an accepted reservation pickup at the Aloft Dallas DFW Airport Grapevine (1033 N Main St / N SH 121); the rider canceled after the collision.<br>
+          <strong>What the receipt shows:</strong> UberX &middot; Aug 28, 2026 &middot; 5:05 AM, upfront fare $12.07, $0.00 collected, pickup and drop-off both &ldquo;N State Highway 121, Coppell&rdquo;. Accept and cancel times are not printed; Uber's trip log is needed to corroborate.
         </div>
       </div>
     `, { className: 'event-map-popup' });
@@ -813,137 +1084,55 @@
     const p0 = activePoints[idx0];
     const p1 = activePoints[idx1];
 
-    if (!p0 || !p1) return p0 || { lat: 0, lon: 0, spd: 0, hd: 0, alt: 0, acc: 0, turnRate: 0, steeringAngle: 0, t: '' };
+    if (!p0 || !p1) return getInterpolatedState(Math.max(0, Math.min(activePoints.length - 1, idxFloat || 0)));
 
-    // Catmull-Rom interpolation for the SUV position (smooth curvature between 1 Hz fixes). Falls back to
-    // linear at the ends of the active range and when either sample is stationary (nothing to curve through).
-    const pm = activePoints[Math.max(0, idx0 - 1)];
-    const p2 = activePoints[Math.min(activePoints.length - 1, idx1 + 1)];
-    const useSpline = idx0 > 0 && idx1 < activePoints.length - 1 && p0.spd > 1.5 && p1.spd > 1.5;
-    let lat, lon;
-    if (useSpline) {
-      const t = ratio, t2 = t * t, t3 = t2 * t;
-      const cr = (a, b, c, d) => 0.5 * ((2 * b) + (-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t2 + (-a + 3 * b - 3 * c + d) * t3);
-      lat = cr(pm.lat, p0.lat, p1.lat, p2.lat);
-      lon = cr(pm.lon, p0.lon, p1.lon, p2.lon);
-    } else {
-      lat = p0.lat + (p1.lat - p0.lat) * ratio;
-      lon = p0.lon + (p1.lon - p0.lon) * ratio;
-    }
-    const spd = p0.spd + (p1.spd - p0.spd) * ratio;
-    const kt = p0.kt + (p1.kt - p0.kt) * ratio;
+    // Position, speed and heading from the motion model (see the precompute above)
+    const gNow = activeStartIndex + idxFloat;
+    const mo = motionAt(gNow);
+    const lat = mo.lat, lon = mo.lon;
+    const spd = (Math.floor(gNow) === IMPACT_GLOBAL_INDEX - 1) ? mo.vMs * 2.23694 : p0.spd + (p1.spd - p0.spd) * ratio; // logged speed; through the impact second the model's (held to the strike, then 0)
+    const kt = spd / 1.15078;
     const alt = p0.alt + (p1.alt - p0.alt) * ratio;
     const acc = p0.acc + (p1.acc - p0.acc) * ratio;
+    const hd = mo.hd;
 
-    // Heading from the motion track (motionHd), interpolated the short way round
-    const h0 = motionHd[activeStartIndex + idx0];
-    const h1 = motionHd[activeStartIndex + idx1];
-    let dAngle = (h1 - h0) % 360;
-    if (dAngle > 180) dAngle -= 360;
-    if (dAngle < -180) dAngle += 360;
-    let hd = (h0 + dAngle * ratio + 360) % 360;
-
-    // Accurate Northward Turn Progression towards 121 Frontage Rd (5:00:12 - 5:00:15 AM)
-    const curGlobal = activeStartIndex + idxFloat;
-    if (curGlobal >= 12780 && curGlobal <= 12786) {
-      if (curGlobal >= 12780 && curGlobal < 12781) {
-        const turnProgress = (curGlobal - 12780);
-        hd = overrideEntryHd + (45.0 - overrideEntryHd) * turnProgress;
-        lat = 32.955021 + (32.955038 - 32.955021) * turnProgress;
-        lon = -97.038284 + (-97.038185 - (-97.038284)) * turnProgress;
-      } else if (curGlobal >= 12781 && curGlobal < 12782) {
-        const turnProgress = (curGlobal - 12781);
-        hd = 45.0 - (45.0 - 15.0) * turnProgress;
-        lat = 32.955038 + (32.955075 - 32.955038) * turnProgress;
-        lon = -97.038185 + (-97.038105 - (-97.038185)) * turnProgress;
-      } else if (curGlobal >= 12782 && curGlobal < 12782.8) {
-        // Driving straight North into 121 northbound lanes prior to strike (Front 100% clear of turn)
-        const turnProgress = (curGlobal - 12782) / 0.8;
-        hd = 15.0 - 15.0 * turnProgress; // Straightens to 0.0° North
-        lat = 32.955075 + (32.955095 - 32.955075) * turnProgress;
-        lon = -97.038105 + (-97.038090 - (-97.038105)) * turnProgress;
-      } else if (curGlobal >= 12782.8 && curGlobal < 12783) {
-        // Impact moment: struck squarely on 3 O'CLOCK right middle/rear passenger side and pushed westward into final resting position
-        const pushProgress = (curGlobal - 12782.8) / 0.2;
-        hd = 0.0;
-        lat = 32.955095 + (32.955086 - 32.955095) * pushProgress;
-        lon = -97.038090 + (-97.038101 - (-97.038090)) * pushProgress;
-      } else {
-        hd = 0.0; // Stationary resting heading facing Straight North along 121 Frontage Rd
-        lat = 32.955086;
-        lon = -97.038101;
-      }
+    // Turn rate (deg/s) from the path heading a fifth of a second either side; steering angle follows it
+    let turnRate = 0;
+    if (mo.vMs > 0.3 && gNow > 0.25 && gNow < N_PTS - 1.25) {
+      const hA = motionAt(gNow - 0.2).hd, hB = motionAt(gNow + 0.2).hd;
+      let dh = (hB - hA) % 360;
+      if (dh > 180) dh -= 360;
+      if (dh < -180) dh += 360;
+      turnRate = dh / 0.4;
     }
-
-    // Calculate Turn Rate (deg/s) and Steering Angle
-    const prevIdx = Math.max(0, idx0 - 1);
-    const nextIdx = Math.min(activePoints.length - 1, idx1 + 1);
-    let windowDelta = (motionHd[activeStartIndex + nextIdx] - motionHd[activeStartIndex + prevIdx]) % 360;
-    if (windowDelta > 180) windowDelta -= 360;
-    if (windowDelta < -180) windowDelta += 360;
-    
-    const turnRate = windowDelta / Math.max(1, nextIdx - prevIdx);
     const steeringAngle = Math.max(-32, Math.min(32, turnRate * 2.5));
 
-    // Calculate Oncoming White Sedan Position (Westbound at 50 MPH trying to beat yellow light)
-    const currentGlobalIdx = activeStartIndex + idxFloat;
-    const deltaTToImpact = currentGlobalIdx - IMPACT_GLOBAL_INDEX; // <= 0 before impact
-    
-    // Target Rest Point: BMW front nose resting directly against the right middle/rear flank of the Atlas
-    // Atlas resting coordinates: [32.955086, -97.038101] facing North (0.0° N)
-    // Atlas right middle side: [32.955086, -97.038085]
-    // BMW resting coordinates: [32.955086, -97.038075] facing West (270.0° W)
-    const sedanImpactRestLat = 32.955086;
-    const sedanImpactRestLon = -97.038075;
-    let sedanLat = sedanImpactRestLat;
-    let sedanLon = sedanImpactRestLon;
-    let sedanHeading = 270.0;
-    let sedanVisible = false;
-    let sedanDistFt = 0;
-    
-    // Cruise Speed: Steady 42.0 MPH cruising speed (posted limit 45 mph) from Waffle House / Bethel Rd approach
-    // Driver thought they were clearing a late yellow light (no intentional acceleration or speeding into the SUV)
-    let sedanSpeedMph = 42.0;
-    if (deltaTToImpact >= 0) {
-      sedanSpeedMph = 0.0; // Rest post-impact
-    }
-
+    // Oncoming white BMW (Unit 2, no GPS): a straight westbound line down the centre of the second westbound lane
+    // from the median (the client's account of its lane; the lane centre measured on Google zoom-21 imagery, lane
+    // lines ~3.6 m apart), at a constant simulated 45 mph (the client's estimate), with no lateral drift toward the Atlas. On that line the
+    // BMW's front meets the Atlas's right side about a metre behind the Atlas's centre: the client says she carried
+    // on past its path so the strike would land at the reinforced centre or slightly rear of the passenger side.
+    // The CR-4 codes the damage as 3 o'clock, "right front quarter damage, angular impact"; photographs of the
+    // damage would settle where along the right side the strike landed.
+    const currentGlobalIdx = gNow;
+    const deltaTToImpact = currentGlobalIdx - STRIKE_G; // <= 0 before the strike (STRIKE_G is about 12782.49)
+    const sedanImpactRestLat = 32.955080, sedanImpactRestLon = -97.038073; // front bumper against the Atlas's right side, just behind centre
+    const sedanFarLat = 32.955116, sedanFarLon = -97.035397;               // 250 m east along the same lane (road bears ~1° north of east)
+    const sedanLaneHeading = bearingDeg({ lat: sedanFarLat, lon: sedanFarLon }, { lat: sedanImpactRestLat, lon: sedanImpactRestLon }); // along its own line (about 269°)
+    let sedanLat = sedanImpactRestLat, sedanLon = sedanImpactRestLon, sedanHeading = sedanLaneHeading;
+    let sedanVisible = false, sedanDistFt = 0;
+    let sedanSpeedMph = deltaTToImpact >= 0 ? 0.0 : 45.0; // simulated; speed not logged (client's estimate "45 pushing 50", did not slow)
     if (deltaTToImpact >= -25.0) {
       sedanVisible = true;
-      if (deltaTToImpact <= 0) {
-        const speedMs = sedanSpeedMph * 0.44704; // 18.776 m/s
-        sedanDistFt = Math.round(Math.abs(deltaTToImpact) * speedMs * 3.28084);
-
-        // Calibrate trajectory: BMW does not pass the intersection stop bar (-97.03785)
-        // until deltaTToImpact >= -1.05s, when the Atlas is already oriented North and through the turn.
-        if (deltaTToImpact >= -1.05) {
-          // Inside intersection box traveling straight west towards Atlas right flank
-          const r = deltaTToImpact / -1.05; // 1.0 at stop bar, 0.0 at impact
-          sedanLat = sedanImpactRestLat + (32.955095 - sedanImpactRestLat) * r;
-          sedanLon = sedanImpactRestLon + (-97.037850 - sedanImpactRestLon) * r;
-          sedanHeading = 270.0;
-        } else if (deltaTToImpact >= -3.5) {
-          // Approaching stop bar along Bass Pro Dr (outside intersection)
-          const r = (deltaTToImpact - (-1.05)) / (-3.5 - (-1.05));
-          sedanLat = 32.955095 + (32.955115 - 32.955095) * r;
-          sedanLon = -97.037850 + (-97.037300 - (-97.037850)) * r;
-          sedanHeading = 270.0;
-        } else {
-          // Cruising westbound from east of Bethel Rd / Waffle House commercial drive
-          const timePast = deltaTToImpact - (-3.5); // negative
-          sedanLat = 32.955115;
-          const dlon = (timePast * speedMs) / (111320.0 * Math.cos(32.955115 * Math.PI / 180));
-          sedanLon = -97.037300 - dlon;
-          sedanHeading = 270.0;
-        }
-      } else {
-        // T-Bone Impact Rest Position: 2014 BMW 550 front bumper against 2025 Atlas right middle flank
-        sedanLat = sedanImpactRestLat;
-        sedanLon = sedanImpactRestLon;
-        sedanHeading = 270.0;
-        sedanDistFt = 0;
+      if (deltaTToImpact < 0) {
+        const distM = Math.abs(deltaTToImpact) * 45.0 * 0.44704;
+        sedanDistFt = Math.round(distM * 3.28084);
+        const r = distM / 250.0;
+        sedanLat = sedanImpactRestLat + (sedanFarLat - sedanImpactRestLat) * r;
+        sedanLon = sedanImpactRestLon + (sedanFarLon - sedanImpactRestLon) * r;
       }
     }
+
 
     return {
       lat,
@@ -1081,40 +1270,46 @@
 
     // 4. Dynamic Camera Tracking & Turn Scaling
     if (cameraMode === 'follow') {
-      let centerLat = state.lat;
-      let centerLon = state.lon;
-
+      // Continuous camera: zoom is a smooth function of speed (closer when slow), with a steady zoom-in over the
+      // last 20 s before impact; the centre leads the vehicle a little and both ease in simulation time, so the
+      // view never steps when speed crosses a threshold. Snaps only when the vehicle is far away (a seek).
+      const gCam = activeStartIndex + idxFloat;
+      const nowMs = performance.now();
+      const dtReal = camLastMs === null ? 0.016 : Math.min(0.1, (nowMs - camLastMs) / 1000);
+      camLastMs = nowMs;
+      const dtSim = dtReal * Math.max(1, playbackSpeed);
+      const lookaheadMeters = isTurnScaleEnabled ? Math.min(40, Math.max(6, state.spd * 0.6)) : 0;
+      const headingRad = (state.hd * Math.PI) / 180;
+      const targetLat = state.lat + (lookaheadMeters * Math.cos(headingRad)) / 111320;
+      const targetLon = state.lon + (lookaheadMeters * Math.sin(headingRad)) / (111320 * Math.cos((state.lat * Math.PI) / 180));
+      let zTarget = map.getZoom();
       if (isTurnScaleEnabled) {
-        // Lookahead camera offset
-        const lookaheadMeters = Math.min(45, Math.max(15, state.spd * 0.7));
-        const headingRad = (state.hd * Math.PI) / 180;
-        
-        const dLat = (lookaheadMeters * Math.cos(headingRad)) / 111320;
-        const dLon = (lookaheadMeters * Math.sin(headingRad)) / (111320 * Math.cos((state.lat * Math.PI) / 180));
-        
-        centerLat += dLat;
-        centerLon += dLon;
-
-        // Dynamic Turn Adaptive Zoom
-        if (state.isHardTurn || (state.spd < 20 && Math.abs(state.turnRate) > 3) || state.isImpact) {
-          targetZoom = 19.5;
-        } else if (state.spd > 55) {
-          targetZoom = 17.0;
-        } else if (state.spd > 35) {
-          targetZoom = 17.5;
-        } else {
-          targetZoom = 18.5;
+        zTarget = Math.max(17.2, Math.min(19.6, 19.6 - 0.05 * state.spd));
+        const toImpact = IMPACT_GLOBAL_INDEX - gCam;
+        if (toImpact <= 20) {
+          const x = Math.min(1, Math.max(0, (20 - toImpact) / 20));
+          const ease = x * x * (3 - 2 * x);
+          zTarget = zTarget + (19.9 - zTarget) * ease;
         }
-
-        currentZoom = currentZoom + (targetZoom - currentZoom) * 0.06;
-        
-        if (Math.abs(map.getZoom() - currentZoom) >= 0.05) {
-          map.setView([centerLat, centerLon], currentZoom, { animate: false });
-        } else {
-          map.panTo([centerLat, centerLon], { animate: false });
-        }
+      }
+      if (camLat === null || metresBetween(camLat, camLon, targetLat, targetLon) > 250) {
+        camLat = targetLat; camLon = targetLon; currentZoom = zTarget;
       } else {
-        map.panTo([centerLat, centerLon], { animate: false });
+        const kC = 1 - Math.exp(-dtSim / 0.35);
+        camLat += (targetLat - camLat) * kC;
+        camLon += (targetLon - camLon) * kC;
+        const kZ = 1 - Math.exp(-dtSim / 1.5);
+        currentZoom += (zTarget - currentZoom) * kZ;
+      }
+      // The tile layers cap the usable zoom (ArcGIS 19, Google 21); setView used to clamp silently, _move does not.
+      const zApply = Math.max(map.getMinZoom(), Math.min(map.getMaxZoom(), currentZoom));
+      if (isTurnScaleEnabled && Math.abs(map.getZoom() - zApply) > 0.002) {
+        map._move(L.latLng(camLat, camLon), zApply, { pinch: true, round: false });
+        camUnsettled = true;
+        if (nowMs - camSettledMs > 250) settleCamera(nowMs);
+      } else {
+        if (camUnsettled) settleCamera(nowMs);
+        map.panTo([camLat, camLon], { animate: false });
       }
     }
 
@@ -1171,27 +1366,27 @@
     if (state.sedanVisible) {
       if (state.deltaTToImpact <= 0) {
         if (state.deltaTToImpact < -1.5) {
-          hudSedanBadge.textContent = '42.0 MPH';
+          hudSedanBadge.textContent = '45.0 MPH';
           hudSedanBadge.style.background = 'rgba(245,158,11,0.25)';
           hudSedanBadge.style.color = '#fbbf24';
-          hudSedanDistance.textContent = `Simulated at 42 MPH (speed not logged; client estimate 40-45) | Approaching stop bar | Dist: ${state.sedanDistFt} ft`;
+          hudSedanDistance.textContent = `Simulated at 45 MPH in the second westbound lane from the median (client's account; speed not logged, client estimate 45-50) | ${state.sedanDistFt} ft to impact`;
         } else {
           hudSedanBadge.textContent = 'IMPACT (DISPUTED)';
           hudSedanBadge.style.background = 'rgba(239,68,68,0.45)';
           hudSedanBadge.style.color = '#fff';
-          hudSedanDistance.textContent = `Client's account: BMW continued without slowing; no room to evade. Unit 2 path is simulated.`;
+          hudSedanDistance.textContent = `Client's account: the BMW stayed in its lane and did not slow; she held her speed so the strike would not land on the front passenger door. Unit 2 path is simulated.`;
         }
       } else {
         hudSedanBadge.textContent = "12 O'CLOCK IMPACT";
         hudSedanBadge.style.background = 'rgba(239,68,68,0.4)';
         hudSedanBadge.style.color = '#fff';
-        hudSedanDistance.textContent = "2014 BMW 550 12 O'Clock front against 2025 Atlas 3 O'Clock right flank | Atlas front undamaged";
+        hudSedanDistance.textContent = "2014 BMW 550 12 o'clock front against 2025 Atlas right side, 3 o'clock (client: centre to rear passenger side; CR-4: 'right front quarter, angular') | Atlas front bumper undamaged";
       }
     } else {
       hudSedanBadge.textContent = 'Not In Range';
       hudSedanBadge.style.background = 'rgba(148,163,184,0.15)';
       hudSedanBadge.style.color = '#94a3b8';
-      hudSedanDistance.textContent = '42.0 MPH Steady Cruise';
+      hudSedanDistance.textContent = '45.0 MPH (simulated; client estimate 45-50)';
     }
 
     // --- Dynamic Texas Diamond Signal Phasing State Update ---
@@ -1249,7 +1444,7 @@
         if (mapU1Red) { mapU1Red.className = 'map-signal-lens red on'; mapU1Yellow.className = 'map-signal-lens yellow off'; mapU1Green.className = 'map-signal-lens green off'; if (mapU1Label) { mapU1Label.textContent = 'EAST: RED'; mapU1Label.style.color = '#f87171'; } }
         if (mapU2Red) { mapU2Red.className = 'map-signal-lens red off'; mapU2Yellow.className = 'map-signal-lens yellow off'; mapU2Green.className = 'map-signal-lens green on'; if (mapU2Label) { mapU2Label.textContent = 'FLOW GREEN'; mapU2Label.style.color = '#34d399'; } }
 
-      } else if (gIdx >= 12752 && gIdx < 12773) {
+      } else if (gIdx >= 12752 && gIdx < 12773.5) {
         // Stage 2: West Light Turns Green & Acceleration Across Bridge (04:59:45 - 05:00:05 AM)
         signalPhaseBadge.className = 'badge-tag signal-badge green';
         signalPhaseBadge.textContent = 'West Green & Bridge Travel';
@@ -1285,10 +1480,14 @@
         if (mapU1Red) { mapU1Red.className = 'map-signal-lens red on'; mapU1Yellow.className = 'map-signal-lens yellow off'; mapU1Green.className = 'map-signal-lens green off'; if (mapU1Label) { mapU1Label.textContent = 'TURN: RED'; mapU1Label.style.color = '#f87171'; } }
         if (mapU2Red) { mapU2Red.className = 'map-signal-lens red off'; mapU2Yellow.className = 'map-signal-lens yellow off'; mapU2Green.className = 'map-signal-lens green on'; if (mapU2Label) { mapU2Label.textContent = 'FLOW GREEN'; mapU2Label.style.color = '#34d399'; } }
 
-      } else if (gIdx >= 12773 && gIdx < 12778.5) {
-        // Stage 3: Deceleration on Amber/Orange Ahead (05:00:06 - 05:00:10 AM)
-        signalPhaseBadge.className = 'badge-tag signal-badge yellow';
-        signalPhaseBadge.textContent = 'Amber Ahead: Slowing for Arrow';
+      } else if (gIdx >= 12773.5 && gIdx < 12778.5) {
+        // Stage 3 (client's account): the THROUGH heads for both directions turn yellow as Unit 1 nears the east
+        // terminal (05:00:05-05:00:10), then all-red for ~1 s; the left-turn arrow stays red until the through
+        // movements have cleared and only then turns green (Stage 4 at 05:00:11). The westbound head is the one
+        // the BMW faced; the eastbound through head (not drawn) changes with it.
+        const allRed = gIdx >= 12777.5;
+        signalPhaseBadge.className = allRed ? 'badge-tag signal-badge red' : 'badge-tag signal-badge yellow';
+        signalPhaseBadge.textContent = allRed ? 'All Red: Arrow Next' : 'Through Heads Amber';
 
         if (westRedLight) {
           westRedLight.className = 'signal-lens red off';
@@ -1298,27 +1497,29 @@
           westSignalLabel.textContent = 'FLOW GREEN';
         }
 
-        // East Turn Light: Amber clearance change / awaiting protected arrow
-        u1RedLight.className = 'signal-lens red off';
-        u1YellowLight.className = 'signal-lens yellow on';
+        // East Turn head: red arrow held until the through phases end
+        u1RedLight.className = 'signal-lens red on';
+        u1YellowLight.className = 'signal-lens yellow off';
         u1GreenLight.className = 'signal-lens green off';
-        u1SignalLabel.className = 'signal-state-label yellow';
-        u1SignalLabel.textContent = 'AMBER (SLOWING)';
+        u1SignalLabel.className = 'signal-state-label red';
+        u1SignalLabel.textContent = allRed ? 'RED (ARROW NEXT)' : 'RED (ARROW PENDING)';
 
-        // BMW: Amber clearance
-        u2RedLight.className = 'signal-lens red off';
-        u2YellowLight.className = 'signal-lens yellow on';
+        // BMW westbound through head: yellow clearance, then red
+        u2RedLight.className = allRed ? 'signal-lens red on' : 'signal-lens red off';
+        u2YellowLight.className = allRed ? 'signal-lens yellow off' : 'signal-lens yellow on';
         u2GreenLight.className = 'signal-lens green off';
-        u2SignalLabel.className = 'signal-state-label yellow';
-        u2SignalLabel.textContent = 'AMBER 3s';
+        u2SignalLabel.className = allRed ? 'signal-state-label red' : 'signal-state-label yellow';
+        u2SignalLabel.textContent = allRed ? 'RED (ALL-RED)' : 'AMBER (CLEARANCE)';
 
-        interlockBadge.textContent = 'AMBER CLEARANCE';
-        interlockBadge.style.color = '#fbbf24';
-        signalInterlockExplain.innerHTML = '<strong>Deceleration (GPS):</strong> 39 to 17 mph over 9 s (05:00:05&ndash;05:00:14). Client\'s account: slowed while waiting for the left-turn arrow to turn green. Signal state here is the client\'s account, not controller data.';
+        interlockBadge.textContent = allRed ? 'ALL-RED INTERVAL' : 'THROUGH CLEARANCE';
+        interlockBadge.style.color = allRed ? '#ef4444' : '#fbbf24';
+        signalInterlockExplain.innerHTML = allRed
+          ? '<strong>All-red (client\'s account):</strong> both through heads red for about a second before the left-turn arrow turns green at 05:00:11. The westbound BMW should already be stopping. Signal state here is the client\'s account, not controller data.'
+          : '<strong>Deceleration (GPS):</strong> 39 to 17 mph over 9 s (05:00:05&ndash;05:00:14). Client\'s account: the eastbound and westbound <em>through</em> heads went yellow as she approached, so she slowed to meet the left-turn arrow, which stayed red until they cleared. At 45 mph the BMW was about 600 ft before its stop line when the amber began (the onset time is a modelling choice; client\'s account: 400&ndash;600 ft). Signal state here is the client\'s account, not controller data.';
 
         if (mapWestRed) { mapWestRed.className = 'map-signal-lens red off'; mapWestYellow.className = 'map-signal-lens yellow off'; mapWestGreen.className = 'map-signal-lens green on'; if (mapWestLabel) { mapWestLabel.textContent = 'WEST: GREEN'; mapWestLabel.style.color = '#34d399'; } }
-        if (mapU1Red) { mapU1Red.className = 'map-signal-lens red off'; mapU1Yellow.className = 'map-signal-lens yellow on'; mapU1Green.className = 'map-signal-lens green off'; if (mapU1Label) { mapU1Label.textContent = 'TURN: AMBER'; mapU1Label.style.color = '#fbbf24'; } }
-        if (mapU2Red) { mapU2Red.className = 'map-signal-lens red off'; mapU2Yellow.className = 'map-signal-lens yellow on'; mapU2Green.className = 'map-signal-lens green off'; if (mapU2Label) { mapU2Label.textContent = 'AMBER 3s'; mapU2Label.style.color = '#fbbf24'; } }
+        if (mapU1Red) { mapU1Red.className = 'map-signal-lens red on'; mapU1Yellow.className = 'map-signal-lens yellow off'; mapU1Green.className = 'map-signal-lens green off'; if (mapU1Label) { mapU1Label.textContent = allRed ? 'TURN: RED (ARROW NEXT)' : 'TURN: RED'; mapU1Label.style.color = '#f87171'; } }
+        if (mapU2Red) { mapU2Red.className = allRed ? 'map-signal-lens red on' : 'map-signal-lens red off'; mapU2Yellow.className = allRed ? 'map-signal-lens yellow off' : 'map-signal-lens yellow on'; mapU2Green.className = 'map-signal-lens green off'; if (mapU2Label) { mapU2Label.textContent = allRed ? 'THROUGH: RED' : 'THROUGH: AMBER'; mapU2Label.style.color = allRed ? '#f87171' : '#fbbf24'; } }
 
       } else if (gIdx >= 12778.5 && gIdx < 12782.8) {
         // Stage 4: Passing White Pavement Arrow & Protected Green Arrow Active (05:00:11 - 05:00:14 AM)
@@ -1352,7 +1553,7 @@
         if (gIdx < 12781.5) {
           signalInterlockExplain.innerHTML = '<strong>Turn initiation (client\'s account):</strong> the left-turn arrow showed steady green as the vehicle reached the painted pavement arrow. The CR-4 narrative says a flashing yellow arrow; this head is a four-section FYA head, so both indications are possible and controller logs are needed to settle it.';
         } else {
-          signalInterlockExplain.innerHTML = '<strong>05:00:14 (client\'s account):</strong> vehicle aligned north into the ramp; looking east the driver saw the BMW continuing toward the intersection without braking. Positions and speed of Unit 2 are simulated, not logged.';
+          signalInterlockExplain.innerHTML = '<strong>05:00:14 (client\'s account):</strong> vehicle turning north into the ramp; looking east the driver saw the BMW coming on in its lane without slowing. She judged it had time to stop and held her speed rather than brake, so the strike would not land on the front passenger door. Positions and speed of Unit 2 are simulated, not logged.';
         }
 
         if (mapWestRed) { mapWestRed.className = 'map-signal-lens red off'; mapWestYellow.className = 'map-signal-lens yellow off'; mapWestGreen.className = 'map-signal-lens green on'; if (mapWestLabel) { mapWestLabel.textContent = 'WEST: GREEN'; mapWestLabel.style.color = '#34d399'; } }
@@ -1386,7 +1587,7 @@
 
         interlockBadge.textContent = 'DISPUTED';
         interlockBadge.style.color = '#ef4444';
-        signalInterlockExplain.innerHTML = '<strong style="color:#ef4444;">Impact (client\'s account):</strong> Unit 2 entered the intersection without slowing (client estimate ~40&ndash;45 mph) and struck Unit 1\'s right side (CR-4: Unit 1 3 o\'clock, Unit 2 12 o\'clock). Whether Unit 2 faced red is unproven; the CR-4 attributes fault to Unit 1.';
+        signalInterlockExplain.innerHTML = '<strong style="color:#ef4444;">Impact (client\'s account):</strong> both vehicles reached the same point at the same instant: the BMW\'s front (12 o\'clock) met the Atlas\'s right side at 3 o\'clock (client: centre to slightly rear of the passenger side; CR-4 damage code: right front quarter, angular). The CR-4 narrative describes Unit 1 striking Unit 2 while turning left. Whether Unit 2 faced red is unproven; the CR-4 attributes fault to Unit 1.';
 
         if (mapWestRed) { mapWestRed.className = 'map-signal-lens red off'; mapWestYellow.className = 'map-signal-lens yellow off'; mapWestGreen.className = 'map-signal-lens green on'; if (mapWestLabel) { mapWestLabel.textContent = 'WEST: GREEN'; mapWestLabel.style.color = '#34d399'; } }
         if (mapU1Red) { mapU1Red.className = 'map-signal-lens red off'; mapU1Yellow.className = 'map-signal-lens yellow off'; mapU1Green.className = 'map-signal-lens green on'; if (mapU1Label) { mapU1Label.textContent = 'GREEN ARROW'; mapU1Label.style.color = '#34d399'; } }
@@ -1439,15 +1640,14 @@
       }
 
       const prevIdx = currentIndex;
-      currentIndex += effectiveSpeed * deltaTimeSec;
+      currentIndex = Math.max(0, currentIndex + effectiveSpeed * Math.max(0, deltaTimeSec));
 
-      // Check Automatic Stop at Impact (05:00:15 AM = index 12783)
-      const impactLocalIdx = IMPACT_GLOBAL_INDEX - activeStartIndex;
+      // Check Automatic Stop at the strike instant (about 05:00:14.5; the first zero-speed fix is index 12783)
+      const impactLocalIdx = STRIKE_G - activeStartIndex;
       if (isAutoStopImpactEnabled && prevIdx < impactLocalIdx && currentIndex >= impactLocalIdx) {
         currentIndex = impactLocalIdx;
         pausePlayback();
         updateUI(currentIndex);
-        map.setView([32.955086, -97.038101], 19.5, { animate: true });
         if (accidentMarker) accidentMarker.openPopup();
       } else if (currentIndex >= activePoints.length - 1) {
         currentIndex = activePoints.length - 1;
@@ -1719,7 +1919,7 @@
       row.innerHTML = `
         <td><strong>${m.title}</strong></td>
         <td style="font-family:var(--font-mono);">${m.time}</td>
-        <td>${isImpact ? '17.2 &rarr; 0.0 MPH (SUV) vs 50 MPH (Sedan)' : '-'}</td>
+        <td>${isImpact ? '17.2 &rarr; 0.0 MPH (SUV) vs ~45 MPH (Sedan, simulated; client estimate 45-50)' : '-'}</td>
         <td style="font-family:var(--font-mono);">${m.lat ? `${m.lat.toFixed(6)}, ${m.lon.toFixed(6)}` : '-'}</td>
         <td>${m.desc}</td>
       `;
@@ -1920,10 +2120,11 @@
   // Deep links: ?at=<global record index | impact>  ?scenario=client|cr4  ?night=0|1
   const params = new URLSearchParams(window.location.search);
   if (params.get('scenario') === 'cr4') { signalScenario = 'cr4'; if (signalScenarioSelect) signalScenarioSelect.value = 'cr4'; }
+  if (params.get('debug') === '1') { window.__recon = { motionAt, state: g => getInterpolatedState(g - activeStartIndex), impact: IMPACT_GLOBAL_INDEX, strike: STRIKE_G, impactHeading: IMPACT_HEADING, activeStart: () => activeStartIndex, activeLength: () => activePoints.length, seek: g => { currentIndex = g - activeStartIndex; updateUI(currentIndex); }, camera: () => ({ zoom: map.getZoom(), center: map.getCenter() }), setView: (lat, lon, z) => { cameraMode = 'overview'; map.setView([lat, lon], z, { animate: false }); }, preset: name => { presetSelect.value = name; presetSelect.dispatchEvent(new Event('change')); }, play: spd => { playbackSpeed = spd || 1; startPlayback(); }, pause: () => pausePlayback(), index: () => activeStartIndex + currentIndex }; }
   if (params.get('night') === '0') isNightMode = false;
   let startIdx = 12648;
   const atParam = params.get('at');
-  if (atParam === 'impact') startIdx = IMPACT_GLOBAL_INDEX;
+  if (atParam === 'impact') startIdx = STRIKE_G;
   else if (atParam && !isNaN(parseInt(atParam, 10))) startIdx = Math.max(0, Math.min(allPoints.length - 1, parseInt(atParam, 10)));
   const startPreset = (startIdx >= 12648 && startIdx <= 12888) ? 'accident_focus' : (startIdx >= 11568 ? 'pre_crash_leg' : 'full_journey');
   presetSelect.value = startPreset;

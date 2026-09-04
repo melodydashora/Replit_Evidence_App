@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "build:dossier-pdf": "node scripts/build-dossier-pdf.js"
+    "build:dossier-pdf": "node scripts/sync-dossier-tables.js && node scripts/build-dossier-pdf.js",
+    "sync:dossier": "node scripts/sync-dossier-tables.js"
   },
   "keywords": [
     "accident-reconstruction",

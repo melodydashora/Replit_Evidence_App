@@ -51,7 +51,7 @@
       <div class="preset-selector-group">
         <span class="preset-label"><i class="fa-solid fa-layer-group"></i> Layer:</span>
         <select id="mapLayerSelect" class="preset-select">
-          <option value="satellite_hybrid" selected>Satellite + Street Labels (Clean)</option>
+          <option value="satellite_hybrid" selected>Satellite + Street Labels (ArcGIS; imagery sits ~2.5 m east of the GPS here)</option>
           <option value="satellite_pure">High-Res Satellite (Aerial Only)</option>
           <option value="google_satellite">Google Satellite (Map Tiles API)</option>
           <option value="dark">Forensic Dark Matter</option>
@@ -122,7 +122,7 @@
         <div class="drawer-section">
           <label class="drawer-label"><i class="fa-solid fa-layer-group"></i> Map Satellite Layer</label>
           <select id="mobileMapLayerSelect" class="drawer-select">
-            <option value="satellite_hybrid" selected>Satellite + Street Labels (Clean)</option>
+            <option value="satellite_hybrid" selected>Satellite + Street Labels (ArcGIS; imagery sits ~2.5 m east of the GPS here)</option>
             <option value="satellite_pure">High-Res Satellite (Aerial Only)</option>
             <option value="google_satellite">Google Satellite (Map Tiles API)</option>
             <option value="dark">Forensic Dark Matter</option>
@@ -257,7 +257,7 @@
             <span id="hudSedanBadge" class="badge-tag" style="background:rgba(245,158,11,0.2); border-color:rgba(245,158,11,0.4); color:#fbbf24;">Approaching (client&rsquo;s account)</span>
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
-            <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; color:#fff;">42.0 MPH</span>
+            <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; color:#fff;">45.0 MPH</span>
             <span id="hudSedanDistance" style="font-family:var(--font-mono); font-size:11.5px; color:#94a3b8;">Heading: 270° W (Waffle House / Bethel Rd approach)</span>
           </div>
         </div>
@@ -309,7 +309,7 @@
 
             <!-- Station 3: Adverse Westbound BMW -->
             <div class="signal-box unit2-signal">
-              <div class="signal-title" title="Westbound Through Lanes (Adverse BMW)">BMW Westbound</div>
+              <div class="signal-title" title="Westbound through head faced by the BMW; the eastbound through head shows the same indication">Through (BMW WB)</div>
               <div class="signal-housing">
                 <div id="u2RedLight" class="signal-lens red on"></div>
                 <div id="u2YellowLight" class="signal-lens yellow off"></div>
@@ -320,7 +320,7 @@
           </div>
 
           <div id="signalInterlockExplain" class="signal-interlock-caption">
-            <strong>TxDOT Diamond Standard:</strong> West Light turned green at 04:59:45 AM. By diamond controller standards, East Light was timed to a <em>Protected Green Arrow</em> to prevent bridge backup, locking the opposing BMW in <em>Solid Red</em>.
+            <strong>Client's account:</strong> the west light turned green at 04:59:45; at the east terminal the through heads went amber, then all red, and the left-turn arrow turned steady green at 05:00:11 while westbound traffic faced red. The CR-4 says the arrow was flashing yellow; the head is a four-section FYA head and only the controller's logs can settle which indication showed.
           </div>
         </div>
 
@@ -345,8 +345,8 @@
       <div id="impactAlertBanner" class="impact-alert-banner">
         <div class="impact-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
         <div>
-          <div class="impact-text-title">Two-Vehicle Collision Impact (T-Bone)</div>
-          <div id="impactAlertDesc" class="impact-text-desc">Unit 2 (2014 BMW 550, white; CR-4: no proof of financial responsibility) front end (12 o&rsquo;clock) struck Unit 1 (2025 VW Atlas SE FWD, black) on the right side as the Atlas turned north. CR-4 damage entries: Unit 1 3 o&rsquo;clock right front quarter, angular impact; Unit 2 12 o&rsquo;clock front end, distributed impact. Fault is disputed: the CR-4 narrative says Unit 1 turned on a flashing yellow arrow; the client says a steady green arrow.</div>
+          <div class="impact-text-title">Two-Vehicle Collision Impact (angular, right side)</div>
+          <div id="impactAlertDesc" class="impact-text-desc">Unit 2 (2014 BMW 550, white; CR-4: no proof of financial responsibility) front end (12 o&rsquo;clock) met Unit 1 (2025 VW Atlas SE FWD, black) on its right side as the Atlas turned north out of its left turn (client: at the centre or slightly rear of the passenger side; CR-4 damage entry: 3 o&rsquo;clock, &ldquo;right front quarter damage, angular impact&rdquo;). CR-4 entry for Unit 2: 12 o&rsquo;clock front end, distributed impact. The CR-4 narrative describes Unit 1 striking Unit 2 while turning left on a flashing yellow light; the client&rsquo;s account is that she turned on a steady green arrow, that both vehicles reached the same point at the same instant, and that she held her speed rather than brake so the strike would not land on the front passenger door. The Atlas came to rest about 6 m west-south-west of the strike, facing north, still inside the intersection (dashcam GPS 05:09:29: N 32.955074 W 97.038170; the phone log settles on the same point); how it moved in between is not recorded. Unit 2 is simulated in the second westbound lane from the median (client&rsquo;s account).</div>
         </div>
       </div>
     </div>
@@ -470,6 +470,6 @@
   <script src="gps_full_data.js"></script>
   
   <!-- Telemetry & Animation Engine -->
-  <script src="telemetry_engine.js?v=20260904d"></script>
+  <script src="telemetry_engine.js?v=20260904q"></script>
 </body>
 </html>

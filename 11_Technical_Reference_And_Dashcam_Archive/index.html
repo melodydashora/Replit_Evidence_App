@@ -149,6 +149,7 @@
 </style>
 </head>
 <body>
+<script src="../site_header.js"></script>
 <div class="container">
   <div class="nav-bar">
     <a href="../00_START_HERE_EVIDENCE_PORTAL.html" class="back-link">
@@ -158,7 +159,7 @@
 
   <div class="header-card">
     <h1><i class="fa-solid fa-box-archive" style="color:#64748b;"></i> Exhibit 11: Technical References &amp; Draft Requests</h1>
-    <p class="folder-desc">Third-party references (Apple&rsquo;s 2022 Crash Detection overview &mdash; a product brief, not a call record; Bosch CDR v18.0 vehicle list and v25.1 product sheet; Vantrue N5 user manual V5.1), a draft Public Information Act request for signal and street-lighting records, a read-only Vecto-Pilot SQL query script, a generated evidence-recovery plan (09/01/2026) and a SHA-256 manifest. No dashcam video is in this folder.</p>
+    <p class="folder-desc">Third-party references (Apple&rsquo;s 2022 Crash Detection overview &mdash; a product brief, not a call record; Bosch CDR v18.0 vehicle list and v25.1 product sheet; Vantrue N5 user manual V5.1), a draft Public Information Act request for signal and street-lighting records, a generated evidence-recovery plan (09/01/2026) and a SHA-256 manifest. No dashcam video is in this folder: a forensic examination of the camera&rsquo;s card on 09/01/2026 established that the camera never recorded the collision (its video pipeline had stalled; only the GPS log ran, and the camera rebooted at 05:03). The examination report (<code>FINDINGS.md</code>) and chain-of-custody log are to be filed here. Added 09/04/2026 from the owner&rsquo;s PC forensic sessions: <code>FINDINGS.md</code> (Dashcam Forensic Findings, 2026-09-01: three independent proofs that no video of the collision was ever written, the full-card header and HEVC-marker scans, the file-system checks of &sect;11, the chronic under-recording since 2026-07-09, and the GPS-derived collision account of &sect;4, which predates the CR-4 reading and still describes a westbound strike); <code>CHAIN-OF-CUSTODY.md</code> (acquisition and handling of the 1 TB microSD, including the disclosed pre-acquisition Mac/Windows metadata writes and, in item 5, the foreign write of 2026-09-01 18:37&ndash;18:46 when the card sat in an Android phone; three non-video clusters at 142.9 GB were taken, all preserved in the 08/29 image); and <code>PRESERVATION-REQUESTS.md</code> (2026-08-29: the e-mail templates for business camera footage and the Public Information Act request for signal records; it records the templates, not whether they were sent, so that question stays open).</p>
   </div>
 
   <table>
@@ -171,6 +172,43 @@
       </tr>
     </thead>
     <tbody>
+
+          <tr class="file-row">
+            <td class="file-name-cell">
+              <i class="fa-solid fa-file-lines file-icon"></i>
+              <a href="FINDINGS.md" target="_blank" class="file-link">FINDINGS.md</a>
+            </td>
+            <td class="file-type-cell">MD</td>
+            <td class="file-size-cell">26.6 KB</td>
+            <td class="file-action-cell">
+              <a href="FINDINGS.md" target="_blank" class="btn-open">View File <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+            </td>
+          </tr>
+
+          <tr class="file-row">
+            <td class="file-name-cell">
+              <i class="fa-solid fa-file-lines file-icon"></i>
+              <a href="CHAIN-OF-CUSTODY.md" target="_blank" class="file-link">CHAIN-OF-CUSTODY.md</a>
+            </td>
+            <td class="file-type-cell">MD</td>
+            <td class="file-size-cell">8.4 KB</td>
+            <td class="file-action-cell">
+              <a href="CHAIN-OF-CUSTODY.md" target="_blank" class="btn-open">View File <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+            </td>
+          </tr>
+
+          <tr class="file-row">
+            <td class="file-name-cell">
+              <i class="fa-solid fa-file-lines file-icon"></i>
+              <a href="PRESERVATION-REQUESTS.md" target="_blank" class="file-link">PRESERVATION-REQUESTS.md</a>
+            </td>
+            <td class="file-type-cell">MD</td>
+            <td class="file-size-cell">5.7 KB</td>
+            <td class="file-action-cell">
+              <a href="PRESERVATION-REQUESTS.md" target="_blank" class="btn-open">View File <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+            </td>
+          </tr>
+
       
           <tr class="file-row">
             <td class="file-name-cell">
@@ -254,19 +292,7 @@
               <a href="n5manual.pdf" target="_blank" class="btn-open">View File <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
             </td>
           </tr>
-<tr class="file-row">
-            <td class="file-name-cell">
-              <i class="fa-solid fa-file file-icon"></i>
-              <a href="vectopilot-0828-readonly-queries.sql" target="_blank" class="file-link">vectopilot-0828-readonly-queries.sql</a>
-            </td>
-            <td class="file-type-cell">SQL</td>
-            <td class="file-size-cell">5.7 KB</td>
-            <td class="file-action-cell">
-              <a href="vectopilot-0828-readonly-queries.sql" target="_blank" class="btn-open">View File <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-            </td>
-          </tr>
-        
-    </tbody>
+</tbody>
   </table>
 </div>
 </body>

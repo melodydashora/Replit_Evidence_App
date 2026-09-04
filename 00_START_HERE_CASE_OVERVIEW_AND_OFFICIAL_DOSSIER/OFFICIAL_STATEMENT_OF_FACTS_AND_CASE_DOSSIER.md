@@ -6,14 +6,14 @@
 **LOCATION:** Intersection of Bass Pro Dr & SH 121 Frontage Rd / On-Ramp, Grapevine, Tarrant County, TX (`32.955144° N, -97.038026° W`)  
 **TxDOT CRASH ID:** 21609720.1 (Certified 09/02/2026 by TxDOT Crash Data & Analysis Section)  
 **GRAPEVINE PD CASE ID:** 2600037671 (Form CR-4 01/01/2026) · Responding Officer: R. Smith (ID 14177)  
-**CLIENT / INSURED:** Melody Dawn Dashora · Progressive Policy #936659747 · Claim #26-854858569  
+**CLIENT / INSURED:** Melody Dawn Dashora · Progressive Policy #936659747 · Claims #26-854858569 (personal policy) and #26-343820011 (Uber claim, handled by Progressive)  
 **ADVERSE DRIVER:** Tamika Savala-Fitzpatrick · 2014 BMW 550 (TX Plate: `vdw2544`) · **UNINSURED ON POLICE REPORT (Proof of Financial Resp: NO)**
 
 ---
 
 ## 1. Executive Summary & Master Case Metadata
 
-On August 28, 2026, at 05:00:15 AM, client Melody Dawn Dashora was operating her 2025 Volkswagen Atlas SUV eastbound on Bass Pro Drive in Grapevine, Texas, en route to an accepted Uber rideshare passenger (Period 2). While executing a protected left turn onto the northbound SH 121 entrance ramp under a Protected Green Arrow, her vehicle was broadsided by an uninsured 2014 White BMW 550 traveling westbound on Bass Pro Drive. 
+On August 28, 2026, at 05:00:15 AM, client Melody Dawn Dashora was operating her 2025 Volkswagen Atlas SUV eastbound on Bass Pro Drive in Grapevine, Texas, en route, on her account, to a pickup for an accepted Uber ride request (Period 2; see §3 and §13.3). While executing a protected left turn onto the northbound SH 121 entrance ramp under a Protected Green Arrow, her vehicle was broadsided by an uninsured 2014 White BMW 550 traveling westbound on Bass Pro Drive. 
 
 The collision knocked the client unconscious, deployed multiple cabin airbags across three zones, severed vehicle accessory circuits, and resulted in emergency transport to Baylor Scott & White Medical Center – Grapevine with a closed head injury (concussion), cervical sprain, and multiple contusions.
 
@@ -39,8 +39,8 @@ Because the adverse driver is uninsured, primary bodily injury recovery is gover
 | **VIN / License Plate** | VIN: **1V2DR2CA0SC529343** · Plate: **TX WHB6147** | VIN: **WBAKN9C5XED681044** · Plate: **TX vdw2544** |
 | **Vehicle Owner** | Melody Dawn Dashora (Financed: Capital One) | Tamika Savala (801 Lake Canyon Pkwy, Irving, TX 75039) |
 | **Insurance Carrier** | **Progressive County Mutual Ins. Co.** | **UNINSURED ON CR-4** (`Proof of Financial Resp: NO` / Subject to ISO Discovery) |
-| **Policy / Claim Number**| Policy #936659747 · Claim #26-854858569 | None (Activates Client's $250k/$500k UM Coverage) |
-| **Applicable Coverage** | UM: $250k/$500k · PIP: $10,003 · Coll: $99 Ded. | Uninsured Motorist Claim against Progressive |
+| **Policy / Claim Number**| Policy #936659747 (declarations page on file) · Claim #26-854858569 · Uber claim #26-343820011 | None (Activates Client's $250k/$500k UM Coverage) |
+| **Applicable Coverage** | Personal policy: UM/UIM BI $250,007/$500,007 · UM/UIM PD $100,007 ($250 ded) · PIP $10,003 · Collision $99 ded. Uber claim 26-343820011: coverage lines shown are Nonowned Medical Payments 2 and Nonowned Collision 2 (certificate: collision at ACV, $2,500 deductible; UM/UIM not on the TNC certificate). Which collision deductible applies is to be confirmed. | Uninsured Motorist Claim against Progressive |
 | **Damage Force Vector** | **3 O'CLOCK** (Right front quarter/side angular impact) | **12 O'CLOCK** (Direct front-end distributed impact) |
 | **Damage Severity** | **DAMAGED 4** (Structural intrusion, multiple airbags) | **DAMAGED 3** (Front-end crumple, airbags deployed) |
 | **Front Bumper Status** | **100% Undamaged** (Conclusive side impact) | **Direct Frontal Impact** (Nose rammed client side) |
@@ -59,8 +59,21 @@ Because the adverse driver is uninsured, primary bodily injury recovery is gover
 | **Citation issued to other driver?** | **NO CITATIONS LOGGED ON CR-4** | Investigating officer noted `Proof of Financial Responsibility: NO` for Unit 2 on the crash report, but logged no citations for either driver at the scene because both were transported by EMS to Baylor Scott & White. Charges for driving uninsured (Tex. Transp. Code § 601.051) and failure to yield/disregard red light remain subject to Grapevine Municipal Court jurisdiction. |
 | **Drive Type** | **CONFIRMED: FRONT-WHEEL DRIVE (FWD)** ✅ | Verified via Progressive / Mitchell Cloud Estimating Records (Mitchell Code: 912009). The vehicle is standard FWD configuration. |
 | **Trim Level** | **CONFIRMED: SE (BASE TRIM)** ✅ | Verified via Progressive / Mitchell Cloud Estimating Records (Mitchell Code: 912009). The vehicle is equipped with the factory SE package (18" alloy wheels, heated/ventilated front seats, heated steering wheel, power driver seat, 3-row seating). ACV valuation should be calculated on clean 2025 Atlas SE FWD comps with positive condition adjustments. |
-| **Progressive Period 2 Coverage Position** | **COVERED UNDER PERSONAL POLICY (Rideshare Endorsement Active)** ✅ | Progressive declarations explicitly state **`Ridesharing: Yes`** on the 2025 Atlas (`WHB6147`), eliminating livery exclusions. Under Texas Insurance Code § 1954, **Collision ($99 deductible)**, **PIP ($10,003)**, and **UM ($250k/$500k)** extend to Period 2 (ride accepted, en route). Formal written confirmation requested from adjuster Sloane S. |
-| **Uber Period 2 UM/UIM Position** | **STATUTORY CONTINGENT UM COVERAGE ACTIVE** ✅ | Under Texas Insurance Code § 1954.053 (HB 3520), Uber provides primary $1M commercial liability and **statutory Uninsured/Underinsured Motorist (UM/UIM)** coverage for drivers during Period 2. Uber trip accepted at 04:59 AM, canceled post-crash at 05:05 AM ($12.07 fare). Data preservation request submitted via Uber Privacy Portal and Incident Response. |
+| **Progressive Period 2 Coverage Position** | **RIDESHARE USE COVERAGE SHOWN ON THE DECLARATIONS PAGE; APPLICATION TO THIS LOSS NOT YET CONFIRMED IN WRITING** ⚠️ | The Progressive declarations page on file (Binder 08) is the renewal term 09/01/2026–03/01/2027 (copy dated 09/04/2026); it states **"This vehicle has Rideshare Use coverage"** and primary use "Pleasure/Personal, Rideshare" for the 2025 Atlas (`WHB6147`), and its limits match the app's coverage-at-time-of-incident screen for 08/28/2026 (Collision $99 deductible, PIP $10,003, UM/UIM BI $250,007/$500,007, UM/UIM PD $100,007). The app's vehicle record shows `Ridesharing: Yes`. The Rideshare Use endorsement form itself is not on file, so what that coverage does while an Uber request is accepted, and which collision deductible applies to this loss, are not yet documented; Tex. Ins. Code ch. 1954 does not by itself require a personal policy to cover TNC use. Written confirmation of coverage for this loss and the endorsement form are to be requested from claim rep Sloane S; as of 09/04/2026 no request or response is on file. |
+| **Uber Period 2 Coverage Position** | **PERIOD 2 (CLIENT'S ACCOUNT) — UBER CLAIM 26-343820011 OPEN; UM/UIM NOT ON THE TNC CERTIFICATE** ⚠️ | Client's account: she had accepted a pickup request at the Aloft Dallas DFW Airport Grapevine and was driving to it, and the rider canceled after the collision (she describes the request as a reservation; the receipt shows the product only as UberX) (canceled-trip receipt: UberX, Aug 28, 2026, 5:05 AM, upfront fare $12.07, $0.00 collected). Uber's Texas Certificate of Insurance (Binder 05) names **United Financial Casualty Company** (NAIC 11770; producer Progressive), policy **06250080** for the accepted-request period: **$1,000,000 combined single limit** plus comprehensive/collision at ACV with a **$2,500 deductible**, non-owned autos only; the certificate states **UM/UIM is not included in any amount**. Uber's in-app notice (Binder 05) states "We work with Progressive to provide protection on your behalf while you operate on the Uber app" and gives the Uber claim number **26-343820011**; the claim summary (coverage lines Nonowned Medical Payments 2 / Nonowned Collision 2; rep Sloane S) still prints an incident date of August 27, 2026 (the client says it first showed August 30). To obtain: correction of that date; Uber's trip log (request, accept, cancel times) under a preservation demand to Uber/Rasier (drafted in Binder 05's plan, not yet sent); the policy forms and any written UM/UIM or PIP rejection (Tex. Ins. Code ch. 1952). |
+
+### 3.1 Claim Files Register
+
+<!-- BEGIN GENERATED: claims -->
+| Carrier | Claim number | Type / coverage | Status | Adjuster & contact | Dates | Next step / notes |
+|---|---|---|---|---|---|---|
+| Progressive (personal auto policy) | **26-854858569** | First-party claim under the client's own policy: PIP, Collision, Rental Reimbursement. UM/UIM bodily injury and property damage are on the policy (the CR-4 records no proof of financial responsibility for the adverse driver); the app itself notes its coverage list is informational. — Coverage at time of incident (app, Aug 28, 2026): BI $250,007/$500,007 · PD $100,007 · PIP $10,003 · UM/UIM BI $250,007/$500,007 · UM/UIM PD $100,007 less $250 · Collision and Comprehensive $99 ded · Rental Reimbursement $60/day, 30 days ($1,800) · Loan/Lease Payoff 25% of ACV, $0 ded · Roadside with Trip Interruption · Progressive Vehicle Protection. Declarations page: vehicle has Rideshare Use coverage; primary use Pleasure/Personal, Rideshare; lienholder Capital One Auto Fin. | Claim received | Sloane S (claim rep, per app) · (800) 776-4737 (Progressive claims; the app shows only 'Call Your Rep') | Incident date on claim Aug 28, 2026; Checked Sep 4, 2026 | Obtain the declarations page for the term in force on Aug 28, 2026 (presumably Mar 1 to Sep 1, 2026, the preceding six-month term; the copy on file is the renewal); submit the dossier as formal notice of the UM bodily-injury and property-damage claim; confirm the $99 collision deductible applies under Rideshare Use coverage; request written confirmation of Period 2 coverage. Incident date on the claim: Friday, August 28, 2026 (rechecked 09/04/2026). Payout Summary (09/04/2026): PIP $0.00, Collision $0.00, Rental Reimbursement $0.00; total $0.00 paid to date. Named insureds on the declarations page: Melody D Dashora and Chetan L Dashora. |
+| Uber claim — handled by Progressive (Uber/Rasier TNC policy; the certificate names United Financial Casualty Company) | **26-343820011** | Claim under Uber's transportation-network-company coverage (Tex. Ins. Code ch. 1954; § 1954.053 if the accepted-request period is confirmed). Uber's in-app notice 'Next steps for your claim' states: 'We work with Progressive to provide protection on your behalf while you operate on the Uber app ... Claim number: 26-343820011'. Client's account: she had accepted a pickup request and was driving to it when struck, and the rider canceled after the collision (she describes the request as a reservation; the receipt shows the product only as UberX). — Coverage lines shown on the claim: Nonowned Medical Payments 2 (Melody Dashora) and Nonowned Collision 2 (2025 Volkswagen Atlas). The COI states UM/UIM is not included in any amount on either Uber policy. | Claim received | Sloane S (same claim rep as the personal-policy claim, per the web claim summary) · Uber claims portal: t.uber.com/claims · Progressive claims (800) 776-4737 | Incident date on claim Aug 27, 2026; Checked Sep 4, 2026 | Have Sloane S correct the incident date in writing (the claim still shows August 27, 2026 on 09/04/2026; the client says it first showed August 30; the collision was August 28, 2026 at 05:00); obtain the TNC policy forms and any written UM/UIM or PIP rejection (Tex. Ins. Code ch. 1952). Uber Driver app inbox notice (binder 05) gives claim number 26-343820011 and states 'We work with Progressive to provide protection on your behalf while you operate on the Uber app'. Progressive web claim summary (policyservicing.apps.progressive.com, 09/01 and 09/04/2026): 'We've received your claim', incident date August 27, 2026, payout $0.00, coverage lines 'Nonowned Medical Payments 2' and 'Nonowned Collision 2' (the Uber/Rasier certificate covers non-owned autos only). The accepted request is the client's account (she describes it as a reservation); the canceled-trip receipt shows only 'UberX · Aug 28, 2026 · 5:05 AM', upfront fare $12.07, pickup and drop-off both 'N State Highway 121, Coppell' beside the Aloft Dallas DFW Airport Grapevine. Uber's trip log (request, accept and cancel times) is the corroborating record to obtain. Preservation letters to Uber Technologies, Inc. and Rasier, LLC were drafted on 09/04/2026 (binder 05, Preservation\_Letters\_And\_Statutory\_Requests/); as of this entry they are unsent drafts and the § 1954.154 log-on-time request has not been written. |
+| Baylor Scott &amp; White Health (hospital account, not an insurance claim) | **Guarantor #121682647** | Hospital balance believed to be the 08/28/2026 Baylor Scott &amp; White Medical Center – Grapevine emergency visit (the billing screenshot shows no service date) — Amount due $13,528.55 (statement dated 09/01/2026); payment plan offered at $752.00 per month; itemized statement not yet obtained | Balance outstanding | (800) 994-0371 (BSW customer service) | Checked Sep 3, 2026 | Request the itemized statement and apply for financial assistance before any settlement distribution; balance exceeds the $10,003 PIP limit, so a hospital lien (Tex. Prop. Code ch. 55) should be expected. |
+| Uber Optional Injury Protection (Atlantic Specialty Insurance Company) | _not yet assigned_ | Driver injury benefit program; pays only if the driver was enrolled before the collision | Not yet filed - enrollment unconfirmed | (844) 747-6221, 24/7 | Checked Sep 1, 2026 | Call with the Uber account email and phone to confirm whether the client was enrolled on 08/28/2026; if so, give notice of injury before the 20-day deadline on 2026-09-17. Source: binder 05 evidence-and-insurance plan (UBER-PLAN.md, 09/01/2026). Deadline and enrollment condition are as stated in that plan, not verified against Atlantic Specialty's terms. |
+
+_Source: `claims_status.js` (4 claims); the same list drives the portal's claims cards._
+<!-- END GENERATED: claims -->
 
 ---
 
@@ -68,7 +81,7 @@ Because the adverse driver is uninsured, primary bodily injury recovery is gover
 
 | Entity | Role / Detail | Contact Information |
 |---|---|---|
-| **Progressive Insurance** | First-Party Insurer (Policy #936659747) · Claim Rep: **Sloane S** | Claim #**26-854858569** · App Messaging / (800) 776-4737 |
+| **Progressive Insurance** | First-Party Insurer (Policy #936659747, underwritten by Progressive County Mutual Ins Co; named insureds Melody D and Chetan L Dashora) · Claim Rep: **Sloane S** | Claim #**26-854858569** · App Messaging / (800) 776-4737 |
 | **Adverse Driver** | Unit 2 Uninsured Motorist: **Tamika Savala-Fitzpatrick** | 2290 W Tarleton St, Stephenville, TX 76401 / Irving, TX |
 | **Eyewitness** | Witness listed on Police Report: **Precious Mccall** | 2305 Summer Place Dr, Arlington, TX 76014 · DL TX 47404130 |
 | **TxDOT Crash Records** | State Custodian of Records · Director: Jim Markham | (844) 274-7457 · Crash ID **21609720.1** |
@@ -79,7 +92,8 @@ Because the adverse driver is uninsured, primary bodily injury recovery is gover
 | **Dr. Sarah Uddin** | Primary Care Physician (Post-Crash Management) | Discharge referral physician of record |
 | **Hendrick VW Frisco** | Servicing Dealer (Reconditioned Atlas 8/24/2026) | 5010 SH 121, Frisco, TX 75034 · RO & Multi-Point Inspection Sheet |
 | **CVS Pharmacy #10523** | Discharged Prescription Pharmacy | 270 Stonebrook Pkwy, Frisco, TX 75036 · (214) 469-1143 |
-| **Uber Technologies** | Rideshare Platform (Period 2 Active at Crash) | Driver Support · Privacy Portal ("Download Your Data") |
+| **Uber Technologies** | Rideshare Platform (client's account: accepted request pending at the time of the collision; Uber's trip log to be obtained) | Driver Support · Privacy Portal ("Download Your Data") |
+| **Uber claim (handled by Progressive)** | Uber's TNC coverage; the certificate names United Financial Casualty Company (NAIC 11770; producer Progressive), policy 06250080 for the accepted-request period · Claim Rep: **Sloane S** | Uber claim #**26-343820011** (Uber in-app notice, Binder 05) · Uber claims portal t.uber.com/claims · Progressive claims (800) 776-4737 |
 | **Volkswagen Group of America** | Manufacturer Connected Vehicle / ACN Records | Car-Net Emergency Response Center · VIN 1V2DR2CA0SC529343 |
 | **ADT Security Services** | Emergency Dispatch Monitoring Provider (SOS Relay) | Incident audio recording and police relay log |
 | **TDLR (Texas Dept of Licensing)**| VSF Regulatory Body (Storage Fee Enforcement) | tdlr.texas.gov · 16 TAC § 85.722 ($22.85 daily rate cap) |
@@ -87,7 +101,7 @@ Because the adverse driver is uninsured, primary bodily injury recovery is gover
 | **City of Grapevine Public Works** | Traffic Cabinet Maintenance / Municipal Agreement | Grapevine Municipal Service Center, 501 Shady Brook Dr, Grapevine, TX 76051<br>Public Works Direct: **(817) 410-3330** · City Main: (817) 410-3000 |
 | **Shell Gas Station** | Surveillance Video (Corner of Bass Pro & W Bethel Rd) | 2000 W Bethel Rd, Grapevine, TX 76051 · **(817) 421-2295** |
 | **Hampton Inn & Suites DFW North** | Surveillance Video (Adjacent to SH-121 / Bass Pro interchange) | 1750 N Hwy 121, Grapevine, TX 76051 · **(972) 471-5000** |
-| **Aloft Dallas DFW Airport Grapevine** | Surveillance Video (Client Intended Destination) | 1033 N Main St, Grapevine, TX 76051 · **(817) 488-6677** |
+| **Aloft Dallas DFW Airport Grapevine** | Surveillance Video (pickup location of the Uber request the client states she had accepted) | 1033 N Main St, Grapevine, TX 76051 · **(817) 488-6677** |
 
 ---
 
@@ -131,7 +145,7 @@ SUB-SECOND KINEMATIC TIMELINE: AUGUST 28, 2026
 05:00:00 AM: Android 911 text session opened.
 05:02:00 AM: Apple Crash Detection placed 911 call ("owner in severe crash and is not responding").
 05:04:00 AM: Dashcam resumed; officer speaks to client. Client on video tells officer: "MY LIGHT WAS GREEN."
-05:05:00 AM: Uber trip canceled by platform ($0.00).
+05:05 AM (receipt time; no seconds printed): Uber request canceled, $0.00 collected (client's account: the rider canceled after the collision).
 05:05:43 AM: Hardware-stamped scene photograph captured (shattered cabin, deployed side curtains).
 06:11:00 AM: Vehicle received at Euless B&B Wrecker Service.
 ========================================================================================================================
@@ -242,7 +256,7 @@ Certified spoliation letters demanding the preservation of all external exterior
 |---|---|---|---|
 | **Shell Gas Station** | 2000 W Bethel Rd, Grapevine, TX 76051 | (817) 421-2295 | Immediate corner of Bass Pro Dr & W Bethel Rd; exterior pumps and canopy cameras face the intersection and adverse BMW westbound approach path. |
 | **Hampton Inn & Suites DFW North** | 1750 N Hwy 121, Grapevine, TX 76051 | (972) 471-5000 | Located directly adjacent to the SH-121 / Bass Pro interchange; parking lot and entrance cameras overlook frontage road corridor. |
-| **Aloft Dallas DFW Airport Grapevine** | 1033 N Main St, Grapevine, TX 76051 *(Physical mailing address)* | (817) 488-6677 | Client's accepted Uber passenger pickup destination; exterior cameras document arrival approach and ambient lighting conditions. |
+| **Aloft Dallas DFW Airport Grapevine** | 1033 N Main St, Grapevine, TX 76051 *(Physical mailing address)* | (817) 488-6677 | Pickup location of the Uber request the client states she had accepted (Period 2, client's account); Uber's trip log to be obtained |
 
 
 ---
@@ -289,6 +303,18 @@ The ER chart carries a templated review-of-systems string stating *"Pt denies LO
 * **Anaphylaxis Warning:** Client is severely anaphylactic to Acetaminophen (APAP). Confirm pharmacy dispensed plain **Ultram (tramadol alone)** and NOT Ultracet (tramadol + acetaminophen).
 * **Toradol (Ketorolac) Time Limit:** Potent NSAID limited to a strict 5-day maximum course.
 * **Commercial Driving Restriction:** Tramadol (opioid) and Robaxin (muscle relaxant) severely impair cognitive function; client cannot drive commercially while prescribed these medications.
+
+### 9.4 Photographic Log of Visible Injuries
+
+Client photographs filed in Binder 06 (`Pictures_Of_Bruises/`). Dates come from the photo files' metadata where available. Descriptions are the client's; no clinician has characterised these images unless a caption says so.
+
+<!-- BEGIN GENERATED: injury-photos -->
+| Date | Body region | Description (client) | Source | File |
+|---|---|---|---|---|
+| Aug 29, 2026 2:35 PM CDT | Neck and neck-shoulder junction (client reports left side) | One diagonal reddish-pink linear mark running from the side of the neck near the shoulder toward the front base of the neck, photographed about 33½ hours after the collision. The client attributes it to the seat belt. The dossier (§9.3) quotes the 08/28 ED exam as noting no seat-belt sign; that exam note is not among the binder's files. The 08/30 Texas Health Frisco and 09/02 UTSW records note patient-reported neck bruising. | Client selfie, iPhone 16 Pro Max front camera (date and time from the file's EXIF metadata; the image also carries embedded GPS coordinates) | IMG\_9304.jpeg |
+
+_Source: Binder 06, `Pictures_Of_Bruises/` (1 photo) with captions from `injury_photos.js`._
+<!-- END GENERATED: injury-photos -->
 
 ---
 
@@ -349,6 +375,14 @@ To prevent an insurance adjuster from improperly depreciating the total loss set
   1. The **Airbag Control Module (EDR)** crash pulse data is imaged.
   2. A certified Volkswagen dealer diagnostic scan of stored trouble codes (powertrain, Front Assist, Hill Hold, Emergency Assist) is completed.
 
+### 12.4 Personal Property Lost or Destroyed in the Vehicle
+
+Contents of the Atlas at the time of the collision, itemized in Binder 12 (`property_loss_items.js`, with receipts and photographs in `Receipts_And_Photos/`). Values are the client's stated purchase or replacement cost. This inventory is separate from the vehicle's total-loss valuation and is to be claimed as property damage against the adverse driver and under whichever first-party or TNC coverage applies (to be confirmed with the adjusters).
+
+<!-- BEGIN GENERATED: property-loss -->
+_No items recorded in Binder 12 (`property_loss_items.js`) yet._
+<!-- END GENERATED: property-loss -->
+
 ---
 
 ## 13. First-Party Coverage Analysis & Texas UM Legal Framework
@@ -363,19 +397,20 @@ To prevent an insurance adjuster from improperly depreciating the total loss set
 * **Comprehensive:** $99 Deductible
 * **Loan/Lease Payoff:** 25% of ACV ($0 deductible)
 * **Rental Reimbursement:** $60/day (30 days / $1,800 max)
-* **Ridesharing Endorsement:** Active (`Ridesharing: Yes` on declarations page)
+* **Rideshare Use coverage:** the declarations page states "This vehicle has Rideshare Use coverage" (primary use: Pleasure/Personal, Rideshare); the app's vehicle record shows `Ridesharing: Yes`. Note: the declarations page on file is the renewal term (09/01/2026–03/01/2027, copy dated 09/04/2026); its limits match the app's coverage-at-time-of-incident screen for 08/28/2026, and the declarations page for the term in force on 08/28/2026 is still to be obtained.
 
 ### 13.2 Texas Uninsured Motorist Law (*Brainard* & *Irwin* Framework)
 * Under *Brainard v. Trinity Universal Ins. Co.*, 216 S.W.3d 809 (Tex. 2006), a Texas UM carrier has no contractual duty to pay benefits until the insured establishes the legal liability of the uninsured driver and damages.
 * Under *Allstate Insurance Co. v. Irwin*, 627 S.W.3d 263 (Tex. 2021), insureds may resolve UM liability and recover statutory attorney's fees through a Uniform Declaratory Judgment Act (UDJA) action.
 * **Strategic Advantage:** Because the adverse driver is confirmed completely uninsured and the sub-second GPS telematics, physical damage vectors, and on-scene video definitively disprove the police officer's narrative, Progressive has zero legal basis to deny liability. Presenting this comprehensive dossier establishes liability pre-suit, maximizing settlement posture.
 
-### 13.3 Uber Commercial TNC Policy (Texas HB 3520 / Ins. Code § 1954.053)
-* At the moment of impact, the client was in **Period 2** (app on, trip accepted, en route to pickup; upfront fare $12.07).
-* Under Texas law, the TNC provides statutory commercial auto liability ($1M) and contingent commercial UM/UIM coverage. A formal claim notice has been logged with Uber Incident Management.
+### 13.3 Uber Commercial TNC Policy (Tex. Ins. Code ch. 1954, added by H.B. 1733, 84th Leg., eff. Jan. 1, 2016)
+* At the moment of impact the client was, on her account, in **Period 2**: she had accepted a pickup request at the Aloft Dallas DFW Airport Grapevine and was driving to it, and the rider canceled after the collision. She describes the request as a reservation; the canceled-trip receipt shows the product only as UberX (Aug 28, 2026, 5:05 AM, upfront fare $12.07, $0.00 collected) and prints no accept or cancel time. Uber's trip log (request, accept and cancel timestamps) is the corroborating record; a preservation demand to Uber/Rasier is drafted in Binder 05's plan and has not yet been sent.
+* Uber's certificate of insurance (Binder 05, filed as the Texas COI; ACORD 25 — the page for policy 06250080 is dated 09/01/2026, the page for policy 06250137 is dated 03/01/2026; both state the certificate "is issued as a matter of information only and confers no rights") names **United Financial Casualty Company** (NAIC 11770; producer Progressive). Policy **06250080** applies once a request is accepted (en route to pickup or on trip): **$1,000,000 combined single limit**, plus comprehensive and collision at actual cash value with a **$2,500 deductible**, non-owned autos only. The certificate states that **UM/UIM coverage is not included in any amount** on either Uber policy; counsel should obtain the policy forms and any written UM/UIM or PIP rejection (Tex. Ins. Code ch. 1952).
+* The Uber claim is **26-343820011**: Uber's in-app notice "Next steps for your claim" (Binder 05) states "We work with Progressive to provide protection on your behalf while you operate on the Uber app" and gives that claim number. Its claim summary (coverage lines "Nonowned Medical Payments 2" and "Nonowned Collision 2"; claim rep Sloane S; $0.00 paid as of 09/04/2026) still prints an incident date of **August 27, 2026** (the client says it first showed August 30); the collision was August 28, 2026, and the rep is to be asked, in writing, to correct it.
 
-* **Uber Commercial Dispatch & $0.00 App UI Artifact Explained:**
-  At the moment of impact (05:00:15 AM), client was actively navigating under an accepted Uber dispatch (Period 2) to pick up a rider at the **Aloft Dallas DFW Airport Grapevine (N. State Hwy 121)** for transport to **DFW International Airport** (Upfront fare: $12.07). The rider canceled post-impact at 05:05:00 AM (4 minutes 45 seconds after collision). Under Uber's app architecture, when a rider cancels prior to pickup, the platform automatically wipes the intended destination from the receipt and populates both pickup and dropoff fields with the server cancellation timestamp and GPS coordinates, displaying a $0.00 fare. This artifact conclusively confirms active Period 2 dispatch at the moment of collision.
+* **Uber Commercial Dispatch & $0.00 App UI Artifact (client's understanding, not verified against any Uber document):**
+  The client's understanding is that the accepted request was a pickup at the **Aloft Dallas DFW Airport Grapevine (N. State Hwy 121)** for a trip to DFW International Airport (the destination does not appear on the receipt), that the rider canceled after the collision, and that Uber's app replaces the destination of a canceled request with the cancellation location, which would explain why the receipt shows pickup and drop-off as the same point. None of this is verified against an Uber record: the receipt prints only "5:05 AM" (no seconds, no accept or cancel timestamp) and shows a $0.00 fare. The receipt supports, but does not by itself prove, that an accepted request was pending at 05:00:15; Uber's server-side trip record is the conclusive document.
 
 ### 13.4 Medical Financing & Lien Mitigation
 * **Texas Hospital Lien (Tex. Prop. Code Ch. 55):** Baylor Scott & White may file a statutory hospital lien against third-party/UM settlement funds. 
@@ -387,7 +422,7 @@ To prevent an insurance adjuster from improperly depreciating the total loss set
 ## 14. Master Exhibit Index & Evidence Repository
 
 All electronic files, forensic models, datasets, and certified documents are maintained in the client's evidence repository:  
-📁 `C:\Users\melod\OneDrive\App Data\Evidence\Folder_1_Interactive_Accident_Reconstruction`
+📁 the case evidence portal (this repository, binders 00–12; the reconstruction app is binder 01 and lives at the repository root)
 
 | Exhibit | Title / Identifier | Description & Evidentiary Value |
 |---|---|---|
@@ -403,6 +438,10 @@ All electronic files, forensic models, datasets, and certified documents are mai
 | **Exhibit 10** | Pre-Crash Cervical Baseline MRI | Texas Health Frisco MRI (12/12/2024). Documents pre-existing baseline cervical anatomy 20 months prior to collision. |
 | **Exhibit 11** | Historical CRPS Treatment Records | Rush Pain Center (2015–2016). Documents long-term stability of left-hand CRPS following stellate ganglion blocks. |
 | **Exhibit 12** | Commercial Driving History | Platform records establishing 50,000+ miles and ~2,000 trips for Uber alone, proving full functional physical capacity prior to crash. |
+| **Exhibit 13** | Claim Files Register | Binder 00 / portal: every open claim (Progressive 26-854858569, UFCC/Uber 26-343820011, hospital account, Uber injury-benefit program) with status, contacts and next steps (§3.1; source `claims_status.js`). |
+| **Exhibit 14** | Personal Property Inventory | Binder 12: itemized contents of the vehicle lost or destroyed in the collision, with values and receipts (§12.4). |
+| **Exhibit 15** | Injury Photograph Log | Binder 06 `Pictures_Of_Bruises/`: dated client photographs of visible injuries with captions (§9.4). |
+| **Exhibit 16** | Phone Records of the Two Emergency Contacts | Binder 09 `Phone_Photos_And_Video/`: IMG_9347.png, iPhone call history for the 911 contact showing an outgoing call on 8/28/26 at 5:02 AM lasting 1 minute (the outgoing call the client attributes to Apple Crash Detection, Exhibit 6); IMG_9348.jpeg, photograph of the Samsung phone's Messages thread "Texting with 911 (SMS/MMS)" headed Friday 5:00 AM (the text-to-911 session; the client's account is that the Uber Driver app was online on that phone). Grapevine PD's dispatch records are the corresponding third-party record (PIA request). |
 
 ---
 
@@ -424,6 +463,7 @@ All electronic files, forensic models, datasets, and certified documents are mai
 | 08/28/2026 | Emergency Medical | Baylor Scott & White ER Encounter (MRN 15608293) | $13,528.55 balance due per MyBSWHealth portal (statement dated 09/01/2026; itemized statement not yet obtained) | Pending Charity Care / PIP |
 | 08/28/2026 | Pharmacy | CVS #10523 (Toradol, Robaxin, Tramadol) | Out of Pocket | Submitted to PIP ($10,003) |
 | 08/28/2026 | Tow & Impound | Euless B&B Wrecker Service (Tow & Storage) | TBD (Statutory Cap $22.85/day) | Progressive Collision / Subrogation |
+| 08/28/2026 | Personal Property | Contents of the vehicle lost or destroyed (itemized in §12.4 / Binder 12) | Running total in §12.4 | Adverse driver; first-party or TNC coverage to be confirmed |
 | 08/28–Pres. | Lost Earnings | Uber Commercial Driving (Baseline: ~2,000 trips / 50k mi) | Estimated ~$1,200–$1,500/week | PIP Wage Loss (80%) & UM Claim |
 
 ---
@@ -439,10 +479,16 @@ All electronic files, forensic models, datasets, and certified documents are mai
 - [ ] **Pain Management Specialist Consultation:**
   - Establish clinical baseline confirming left-hand CRPS was stable for 10 years without spread prior to trauma.
   - Evaluate and initiate treatment for new post-traumatic right lower leg allodynia.
+- [ ] **Progressive policy record:** obtain the declarations page for the term in force on 08/28/2026 (presumably 03/01/2026–09/01/2026, the preceding six-month term); the copy on file is the 09/01/2026 renewal.
 - [ ] **Progressive UM & Total Loss Administration (Adjuster Sloane S):**
   - Submit this Master Dossier formally placing Progressive on notice of an **Uninsured Motorist (UM)** bodily injury and property damage claim.
-  - Confirm application of the personal $99 collision deductible under the active rideshare endorsement.
+  - Confirm in writing whether the personal policy's $99 collision deductible (rather than the TNC policy's $2,500) applies under the Rideshare Use coverage shown on the declarations page, and obtain the Rideshare Use endorsement form.
   - Submit Capital One payoff letter ($39,688.03) and demand Hendrick VW reconditioning condition adjustment on total loss valuation.
   - Demand preservation of vehicle EDR and execution of dealer diagnostic scan before salvage release.
+- [ ] **Uber claim 26-343820011 (handled by Progressive):**
+  - Have Sloane S correct the incident date on claim 26-343820011 in writing: the claim summary showed August 27, 2026 on 09/01/2026 (IMG_9385) and again on 09/04/2026; the client recalls it first displaying August 30 (no screenshot); the collision was August 28, 2026 at 05:00.
+  - Obtain the policy forms for 06250080 and any written UM/UIM or PIP rejection (Tex. Ins. Code ch. 1952); the certificate states UM/UIM is not included.
+  - Send the preservation demand to Uber/Rasier drafted in Binder 05's plan and obtain Uber's trip log (request, accept, cancel timestamps for the canceled 5:05 AM trip) to corroborate Period 2.
+- [ ] **Records the client maintains (portal):** keep `claims_status.js` current after every adjuster contact; add each lost item and its receipt to Binder 12; add dated injury photographs to Binder 06; then run `npm run build:dossier-pdf` so this dossier reflects them.
 - [ ] **Formal Legal Retainer:**
   - Retain experienced Texas personal injury counsel to formally file the Uninsured Motorist claim and enforce liability under *Allstate v. Irwin*.
